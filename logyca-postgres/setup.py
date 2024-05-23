@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 COMPANY_NAME="LOGYCA"
 PACKAGE_NAME = "logyca-postgres"
-VERSION = "0.1.2rc1"
+VERSION = "0.1.2"
 
 install_requires = ["SQLAlchemy>=2.0.6","starlette>=0.24.0"]
 install_requires_asyncpg = ["asyncpg >=0.27.0"]
@@ -27,7 +27,7 @@ setup(
     license='MIT License',
     author='Jaime Andres Cardona Carrillo',
     author_email='jacardona@outlook.com',
-    url='https://github.com/logyca/<soon>',
+    url='https://github.com/logyca/python-libraries/tree/main/logyca-postgres',
     keywords="postgres, driver database",
     classifiers=[
         "Development Status :: 4 - Beta",

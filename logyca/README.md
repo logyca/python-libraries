@@ -34,8 +34,10 @@
 * **Monitoring**: Standard methods to report check health status codes.
 * **Helpers**: Standard methods to be used. *
 
-[Source code](https://github.com/logyca/python-libraries)
+[Source code](https://github.com/logyca/python-libraries/tree/main/logyca)
 | [Package (PyPI)](https://pypi.org/project/logyca/)
+| [Samples](https://github.com/logyca/python-libraries/tree/main/logyca/samples)
+| [Unit tests](https://github.com/logyca/python-libraries/tree/main/logyca/tests)
 
 ---
 

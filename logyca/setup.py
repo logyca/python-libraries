@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 COMPANY_NAME="LOGYCA"
 PACKAGE_NAME = "logyca"
-VERSION = "0.1.10rc1"
+VERSION = "0.1.10"
 
 install_requires = ["pydantic >=1.8","pytz >=2023.3"]
 install_requires_fastapi = ["fastapi>=0.96.0","starlette>=0.24.0"]
@@ -25,7 +25,7 @@ setup(
     license='MIT License',
     author='Jaime Andres Cardona Carrillo',
     author_email='jacardona@outlook.com',
-    url='https://github.com/logyca/<soon>',
+    url='https://github.com/logyca/python-libraries/tree/main/logyca',
     keywords="api result, result dto, result scheme",
     classifiers=[
     "Development Status :: 4 - Beta",

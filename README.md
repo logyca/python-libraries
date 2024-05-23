@@ -58,7 +58,7 @@ python -m pip install pipenv
 python -m pipenv shell
 
 # Build tool
-pip install --upgrade setuptools
+pip install --upgrade setuptools build
 
 # Publish to pypi/Azure DevOps Artifacts tool
 pip install --upgrade twine

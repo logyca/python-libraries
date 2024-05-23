@@ -31,8 +31,9 @@
 
 * **Traversal libraries**: Standard methods to connect to postgres with dependency injection using yield to be used by microservices such as API(s), Workers or scripts.
 
-[Source code](https://github.com/logyca/python-libraries)
+[Source code](https://github.com/logyca/python-libraries/tree/main/logyca-postgres)
 | [Package (PyPI)](https://pypi.org/project/logyca-postgres/)
+| [Samples](https://github.com/logyca/python-libraries/tree/main/logyca-postgres/samples)
 
 ---
 
