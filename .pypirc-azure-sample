@@ -1,0 +1,9 @@
+[distutils]
+Index-servers =
+  logyca-postgres
+
+[logyca-postgres]
+Repository = https://pkgs.dev.azure.com/grupologyca/shared_code_library/_packaging/logyca-postgres/pypi/upload/
+username = __token__
+password = xxx
+
