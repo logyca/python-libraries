@@ -355,3 +355,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Documentation improvements.
 - Documentation integrated with github
+
+## [0.1.11] - 2024-05-24
+### Deprecated
+- add print info deprecated in convert_string_to_boolean()
+### Added
+- new parse_bool() function that will replace convert_string_to_boolean()

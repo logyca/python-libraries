@@ -16,6 +16,7 @@ from logyca.schemas.output.tokensdto import TokensDTO
 from logyca.utils.helpers.datetimehelpers import convertDateTimeStampUTCtoUTCColombia
 from logyca.utils.helpers.stringshelpers import buildUrl
 from logyca.utils.helpers.stringshelpers import convert_string_to_boolean
+from logyca.utils.helpers.parse_functions import parse_bool
 
 from logyca.utils.handlers.logger import Logger
 from logyca.utils.handlers.logger import ConstantsLogger

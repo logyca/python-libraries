@@ -10,6 +10,8 @@ def buildUrl(url1:str,url2:str)->str:
     return parse.urljoin(url1, url2)
 
 def convert_string_to_boolean(truth_value: str) -> bool:
+    # TODO - Deprecated 2024/05/24
+    print("Soon this function will be retired: convert_string_to_boolean(), please change it to the following: parse_bool()")
     lowercased_value = str(truth_value).lower()
 
     if lowercased_value in ("yes", "true", "1", "on"):
