@@ -38,7 +38,7 @@ else:
 # folder_local_full_path="c:\\tmp"
 # file="video2.mp4" # 2 GB
 # file="video1.mp4" # 4 MB
-# file="20240126084440-backup-gs1codes.dump" # 2 GB
+# file="20240126084440-backup.dump" # 2 GB
 # chronometer.start()
 # status=asabm.container_blob_upload_data_transfer_options(folder_local_full_path,file,App.AzureStorageAccount.Containers.NAME_WITH_DATA,max_concurrency=2)
 # chronometer.stop()

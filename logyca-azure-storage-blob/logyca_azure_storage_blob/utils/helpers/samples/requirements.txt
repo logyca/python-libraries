@@ -1,6 +1,0 @@
-azure.storage.blob==12.20.0
-jaanca-chronometer==0.1.1
-jaanca-datetime==0.1.0
-logyca_azure_storage_blob==0.1.0
-logyca==0.1.11
-pytz==2024.1

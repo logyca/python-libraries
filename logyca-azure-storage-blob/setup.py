@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 COMPANY_NAME="LOGYCA"
 PACKAGE_NAME = "logyca-azure-storage-blob"
-VERSION = "0.0.1rc4"
+VERSION = "0.1.0"
 
 install_requires = ["azure.storage.blob>=12.20.0"]
 

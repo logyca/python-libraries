@@ -18,13 +18,13 @@ else:
     print(blob_list)
     # Folders and subfolders
     # ----------------------
-    # name: 20240126084440-backup-gs1codes.backup
+    # name: 20240126084440-backup.backup
     # size: 2186151528 bytes
     # content_md5: bytearray(b'\xcaR7\xc4\x99a\xcf?\xd1\xde\xf2d&\xcc\x15\x08')
     # last_modified: 2024-05-14 21:49:35+00:00
     # blob_type: BlobType.BLOCKBLOB
     # ----------------------
-    # name: 20240126084440-backup-gs1codes.dump
+    # name: 20240126084440-backup.dump
     # size: 2186151528 bytes
     # content_md5: bytearray(b'\xcaR7\xc4\x99a\xcf?\xd1\xde\xf2d&\xcc\x15\x08')
     # last_modified: 2024-05-15 01:49:30+00:00

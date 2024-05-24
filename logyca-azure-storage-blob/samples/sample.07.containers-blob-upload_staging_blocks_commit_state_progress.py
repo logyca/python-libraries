@@ -35,7 +35,7 @@ else:
 
 # # Example 3 - Big file
 # folder="c:\\tmp"
-# file="20240126084440-backup-gs1codes.dump" # 2 GB
+# file="20240126084440-backup.dump" # 2 GB
 # file="video1.mp4" # 4 MB
 # # file="video2.mp4" # 1 GB
 

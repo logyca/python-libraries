@@ -36,7 +36,7 @@ else:
 
 # # Example 3 - Big file
 # folder_local_full_path="c:\\tmp"
-# file="20240126084440-backup-gs1codes.dump" # 2 GB
+# file="20240126084440-backup.dump" # 2 GB
 # file="video1.mp4" # 4 MB
 # # file="video3.mp4" # 1 GB
 # chronometer.start()
