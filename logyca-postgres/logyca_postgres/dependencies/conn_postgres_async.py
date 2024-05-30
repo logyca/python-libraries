@@ -193,17 +193,10 @@ async def check_connection_async(async_session: AsyncSession)->tuple[bool,str]:
 async def commit_rollback_async(async_session: AsyncSession):
     try:
         await async_session.commit()
-    except IntegrityError as integrity_exc:
-        await async_session.rollback()
-        msg_error_already_exists = "The record you are trying to create already exists."
-        raise HTTPException(
-            status_code=HTTP_409_CONFLICT,
-            detail=msg_error_already_exists,
-        )
-    except Exception as exc:
+    except Exception as e:
         await async_session.rollback()
         raise HTTPException(
             status_code=HTTP_409_CONFLICT,
-            detail=f"{exc}",
+            detail=f"{e}",
         )
 

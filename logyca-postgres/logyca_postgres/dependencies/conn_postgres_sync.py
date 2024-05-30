@@ -203,18 +203,10 @@ def commit_rollback_sync(sync_session: Session):
     '''
     try:
         sync_session.commit()
-    except IntegrityError as integrity_exc:
-        msg_error_already_exists_exception =f"The record you are trying to create already exists: {0}"
-        sync_session.rollback()
-        msg_error_already_exists = "The record you are trying to create already exists."
-        raise HTTPException(
-            status_code=HTTP_409_CONFLICT,
-            detail=msg_error_already_exists,
-        )
-    except Exception as exc:
+    except Exception as e:
         sync_session.rollback()
         raise HTTPException(
             status_code=HTTP_409_CONFLICT,
-            detail=f"{exc}",
+            detail=f"{e}",
         )
 
