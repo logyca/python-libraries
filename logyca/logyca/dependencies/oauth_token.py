@@ -10,8 +10,10 @@ import jwt
 import aiohttp
 from logyca.schemas.input.claimsdto import ClaimsDTO
 from logyca.schemas.input.jwt import BearerToken
+from starlette.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED
+from logyca.utils.constants.messages import Messages
 
-auth_scheme = HTTPBearer()
+auth_scheme = HTTPBearer(auto_error=False)
 
 class OAuthToken:
     '''Description
@@ -62,6 +64,13 @@ class OAuthToken:
                 async with aiohttp.ClientSession(headers=headers) as session:
                     async with session.get(urlEndpoint) as response:
                         json_body = await response.json()
+                
+                if response.status != HTTP_200_OK:
+                    raise HTTPException(
+                        status_code=HTTP_401_UNAUTHORIZED,
+                        detail=Messages.MSG_UNAUTHORIZED,
+                    )
+                
                 payload = jwt.decode(
                     bearer_token.credentials,
                     algorithms=["RS256"],
@@ -71,15 +80,13 @@ class OAuthToken:
                 claimsDTO.email=payload["emails"][0]
                 claimsDTO.expirationTimeUTCBogota=convertDateTimeStampUTCtoUTCColombia(payload["exp"])
                 return claimsDTO
-        except Exception as e:
-            msgErrorFromSession=response.headers.get('www-authenticate')
-            aPIResultDTO=APIResultDTO()
-            aPIResultDTO.resultMessage=msgErrorFromSession
-            aPIResultDTO.apiException.logycaStatus=LogycaStatusEnum.UnAuthenticated
-            aPIResultDTO.apiException.status=LogycaStatusEnum.UnAuthenticated.mappingHttpStatusCode
+        except Exception as e:        
+            api_result_dto = APIResultDTO()
+            api_result_dto.apiException.logycaStatus = LogycaStatusEnum.UnAuthenticated
+            api_result_dto.apiException.status = LogycaStatusEnum.UnAuthenticated.mappingHttpStatusCode            
+            api_result_dto.dataError = True
+
             raise HTTPException(
-                detail=jsonable_encoder(aPIResultDTO),
-                status_code=aPIResultDTO.apiException.status
-                )
-
-
+                detail=jsonable_encoder(api_result_dto),
+                status_code=api_result_dto.apiException.status,
+            )

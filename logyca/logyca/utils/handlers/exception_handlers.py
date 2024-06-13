@@ -1,9 +1,10 @@
-from logyca.utils.handlers.logger import ConstantsLogger
 from fastapi.exceptions import RequestValidationError, HTTPException
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
-from logyca.utils.constants.logycastatusenum import LogycaStatusEnum
 from logyca.schemas.output.apIresultdto import APIResultDTO
+from logyca.utils.constants.logycastatusenum import LogycaStatusEnum
+from logyca.utils.handlers.logger import ConstantsLogger
+from logyca.utils.helpers.parse_functions import parse_bool
 import json, traceback
 import logging
 from starlette.status import (
@@ -94,15 +95,22 @@ async def validation_exception_handler_async(_: Request, exc: RequestValidationE
     )
 
 async def http_exception_handler_async(_: Request, exc: HTTPException):
-    api_result_dto = api_result_builder(
-        detail=exc.detail,
-        status_code=exc.status_code,
-        logyca_status=mapping_logyca_status_code(exc.status_code),
-    )
-    return JSONResponse(
-        status_code=200,
-        content=api_result_dto.model_dump(),
-    )
+    findValue = exc.detail["dataError"]
+    if parse_bool(findValue) is not None:
+        return JSONResponse(
+            status_code=exc.status_code,
+            content=exc.detail,
+        )
+    else:
+        api_result_dto = api_result_builder(
+            detail=exc.detail,
+            status_code=exc.status_code,
+            logyca_status=mapping_logyca_status_code(exc.status_code),
+        )
+        return JSONResponse(
+            status_code=exc.status_code,
+            content=api_result_dto.model_dump(),
+        )
 
 async def unhandled_exception_handler_async(_: Request, exc: Exception):
     exception_info = {

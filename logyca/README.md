@@ -207,7 +207,6 @@ def simulator_api_return():
 simulator_api_return()
 
 # output sample
-  # http_status = 200 => The frontend needs confirmation that it received a response from the endpoint
   #
   # {
   #     "resultToken": {
@@ -361,3 +360,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - add print info deprecated in convert_string_to_boolean()
 ### Added
 - new parse_bool() function that will replace convert_string_to_boolean()
+
+## [0.1.12-13] - 2024-06-13
+### Fixed
+- Oauth fix
