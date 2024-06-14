@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 COMPANY_NAME="LOGYCA"
 PACKAGE_NAME = "logyca"
-VERSION = "0.1.12"
+VERSION = "0.1.13"
 
 install_requires = ["pydantic>=1.8","pytz>=2023.3"]
 install_requires_fastapi = ["fastapi>=0.96.0","starlette>=0.24.0"]

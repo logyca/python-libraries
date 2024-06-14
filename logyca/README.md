@@ -364,3 +364,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.12-13] - 2024-06-13
 ### Fixed
 - Oauth fix
+
+## [0.1.13] - 2024-06-14
+### Added
+- New Logger feature to rotate backup logs and allow them to be written.

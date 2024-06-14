@@ -20,6 +20,7 @@ from logyca.utils.helpers.parse_functions import parse_bool
 
 from logyca.utils.handlers.logger import Logger
 from logyca.utils.handlers.logger import ConstantsLogger
+from logyca.utils.handlers.singleton import Singleton
 
 # If you need the logyca library but without the utilities focused on fastapi
 try:
