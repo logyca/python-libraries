@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 COMPANY_NAME="LOGYCA"
 PACKAGE_NAME = "logyca-pagination"
-VERSION = "0.0.1rc3"
+VERSION = "0.1.0"
 
 install_requires = ["pydantic>=2.0.3","sqlalchemy>=2.0.6"]
 
