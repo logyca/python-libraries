@@ -8,7 +8,7 @@ from logyca.schemas.input.oauth_token import OAuthTokenScheme
 
 from logyca.schemas.output.healthdto import HealthEnum
 from logyca.schemas.output.apifilterexceptiondto import ApiFilterExceptionDTO
-from logyca.schemas.output.apIresultdto import APIResultDTO
+from logyca.schemas.output.apIresultdto import APIResultDTO, ValidationError, APIResultDTOExternal
 from logyca.schemas.output.healthdto import HealthDTO
 from logyca.schemas.output.httpexceptiondto import HTTPExceptionDTO
 from logyca.schemas.output.tokensdto import TokensDTO

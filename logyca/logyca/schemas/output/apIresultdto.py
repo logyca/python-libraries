@@ -1,7 +1,8 @@
-from logyca.schemas.output.tokensdto import TokensDTO
 from logyca.schemas.output.apifilterexceptiondto import ApiFilterExceptionDTO
-from typing import Any
+from logyca.schemas.output.tokensdto import TokensDTO
 from pydantic import BaseModel,Field
+from typing import Any
+from uuid import UUID, uuid4
 
 class APIResultDTO(BaseModel):
         resultToken:TokensDTO=Field(default=TokensDTO(),description="Gets or sets object with result")
@@ -13,3 +14,11 @@ class APIResultDTO(BaseModel):
                 kwargs['dataError'] = False
                 kwargs['apiException'] = ApiFilterExceptionDTO()
                 super().__init__(**kwargs)
+
+class ValidationError(BaseModel):
+        detailError: str = Field(default="")
+        transactionId: str = Field(default="")
+
+class APIResultDTOExternal(APIResultDTO):
+        validationErrors: list[ValidationError] | None = Field(default=[])
+        traceAbilityId: UUID  = Field(default=uuid4)

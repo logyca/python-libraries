@@ -76,9 +76,10 @@ class OAuthToken:
                     algorithms=["RS256"],
                     options={"verify_signature":False}
                     )            
-                claimsDTO.name=payload["name"]
                 claimsDTO.email=payload["emails"][0]
                 claimsDTO.expirationTimeUTCBogota=convertDateTimeStampUTCtoUTCColombia(payload["exp"])
+                claimsDTO.name=payload["name"]
+                claimsDTO.token=bearer_token.credentials
                 return claimsDTO
         except Exception as e:        
             api_result_dto = APIResultDTO()

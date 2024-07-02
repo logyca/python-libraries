@@ -90,7 +90,7 @@ async def validation_exception_handler_async(_: Request, exc: RequestValidationE
         logyca_status=LogycaStatusEnum.Invalid_Argument,
     )
     return JSONResponse(
-        status_code=200,
+        status_code=HTTP_400_BAD_REQUEST,
         content=api_result_dto.model_dump(),
     )
 
@@ -126,6 +126,6 @@ async def unhandled_exception_handler_async(_: Request, exc: Exception):
         logyca_status=LogycaStatusEnum.Unknown,
     )
     return JSONResponse(
-        status_code=200,
+        status_code=HTTP_500_INTERNAL_SERVER_ERROR,
         content=api_result_dto.model_dump(),
     )
