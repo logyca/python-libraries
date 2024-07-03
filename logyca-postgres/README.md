@@ -299,3 +299,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.3] - 2024-05-30
 ### Fixed
 - Static messages are removed, since they do not cover errors globally.
+
+## [0.1.4] - 2024-07-03
+### Fixed
+- Postgresql sync connection, fix ssl mode name
+

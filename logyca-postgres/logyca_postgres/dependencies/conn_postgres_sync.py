@@ -177,7 +177,7 @@ class SyncConnEngine(metaclass=Singleton):
         """
         dialect="postgresql"
         driver="psycopg2"
-        ssl_option = '?ssl=require' if ssl_enable else ''
+        ssl_option = '?sslmode=require' if ssl_enable else ''
         ps_escaping_special_characters=html_escaping_special_characters(password)
         return f"{dialect}+{driver}://{user}:{ps_escaping_special_characters}@{host}:{port}/{database}{ssl_option}"
 

@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 COMPANY_NAME="LOGYCA"
 PACKAGE_NAME = "logyca-postgres"
-VERSION = "0.1.3"
+VERSION = "0.1.4"
 
 install_requires = ["SQLAlchemy>=2.0.6","starlette>=0.24.0"]
 install_requires_asyncpg = ["asyncpg >=0.27.0"]
