@@ -78,19 +78,24 @@ logyca < MAJOR >.< MINOR >.< PATCH >
     - X.Y (Final release/Stable/Production): Completed, stable version ready for use in production. Full release for public use.
 
 ---
+# Make multiple connections to different motors
 
-# Example of concepts that use a library with a singleton pattern and connection to multiple engines with yield dependency injection
+## When configuring the connection for dependency injection to another engine, a new object must be created that includes the singleton pattern.
+
+The same thing must be done for each engine.
 
 The library uses a singleton pattern "class SyncConnEngine(metaclass=Singleton):", where the class is allowed to be instantiated only once. You can create another connection to another engine but you must create an inherited class in order to create a new configuration instance.
 
 Example:
+```python
 class SyncConnEngineX(SyncConnEngine):
     def __init__(self, url_connection,server_settings):
         super().__init__(url_connection,server_settings)
 sync_session_x=SyncConnEngineX(
-    url_connection=SyncConnEngine.build_url_connection(user=settings.DB_USER_X,password=settings.DB_PASS_X,host=settings.DB_HOST_X,port=settings.DB_PORT_X,database=settings.DB_NAME_X,ssl_enable=settings.DB_SSL_X),
-    server_settings=SyncConnEngine.server_settings(pool_size=5,max_overflow=1,pool_recycle=10800,application_name=f"{App.Settings.NAME} - SyncConnEngineX")
+    url_connection=SyncConnEngineX.build_url_connection(user=settings.DB_USER_X,password=settings.DB_PASS_X,host=settings.DB_HOST_X,port=settings.DB_PORT_X,database=settings.DB_NAME_X,ssl_enable=SyncConnEngineX.DB_SSL_X),
+    server_settings=SyncConnEngineX.server_settings(pool_size=5,max_overflow=1,pool_recycle=10800,application_name=f"{App.Settings.NAME} - SyncConnEngineX")
     )
+```
 
 ## Asynchronous mode
 FastAPI
@@ -303,4 +308,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.4] - 2024-07-03
 ### Fixed
 - Postgresql sync connection, fix ssl mode name
+
+## [0.1.5] - 2024-07-05
+### Fixed
+- Readme upgrade
 
