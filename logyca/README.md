@@ -372,3 +372,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.14] - 2024-07-02
 ### Added
 - New APIResultDTOExternal feature to Scheme output
+
+## [0.1.15] - 2024-07-05
+### Fixed
+- Updated LogycaStatusEnum for starlette library use
+- Correction of exception handlers.

@@ -1,9 +1,32 @@
 from enum import IntEnum
-from http import HTTPStatus
+from starlette.status import (
+    HTTP_200_OK,
+    HTTP_201_CREATED,
+    HTTP_202_ACCEPTED,
+    HTTP_400_BAD_REQUEST,
+    HTTP_401_UNAUTHORIZED,
+    HTTP_403_FORBIDDEN,
+    HTTP_404_NOT_FOUND,
+    HTTP_409_CONFLICT,
+    HTTP_429_TOO_MANY_REQUESTS,
+    HTTP_500_INTERNAL_SERVER_ERROR,
+    HTTP_501_NOT_IMPLEMENTED,
+    HTTP_503_SERVICE_UNAVAILABLE,
+    HTTP_504_GATEWAY_TIMEOUT,
+)
 
 class LogycaStatusEnum(IntEnum):
         '''Description
-        LOGYCA Custom States
+        ### Example
+
+        ```python
+        logyca_status=LogycaStatusEnum.Not_Found
+        http_status=LogycaStatusEnum.Not_Found.mappingHttpStatusCode
+        logyca_status_from_http_status=LogycaStatusEnum.from_http_status_code(404)
+        print(f"404: logyca_status={logyca_status},http_status={http_status},logyca_status_from_http_status={logyca_status_from_http_status}")
+        ```        
+
+        # LOGYCA Custom States
         \n:param Ok: Not an error; returned on success
         \n:param Cancelled: The operation was cancelled, typically by the caller.
         \n:param Unknown: Unknown error. For example, this error may be returned when a Status value received from another address space belongs to an error space that is not known in this address space. Also errors raised by APIs that do not return enough error information may be converted to this error.
@@ -25,6 +48,7 @@ class LogycaStatusEnum(IntEnum):
         \n:param Created: Pending
         \n:param InProcess: Transaction in process.
         \n:return int: Integer according to variable meaning
+
         '''
         Ok = 0
         Cancelled = 1
@@ -48,24 +72,44 @@ class LogycaStatusEnum(IntEnum):
         InProcess = 1002
         @property
         def mappingHttpStatusCode(self):
-                if (self.value==LogycaStatusEnum.Ok):                   return HTTPStatus.OK
-                if (self.value==LogycaStatusEnum.Cancelled):            return HTTPStatus.NOT_FOUND
-                if (self.value==LogycaStatusEnum.Unknown):              return HTTPStatus.INTERNAL_SERVER_ERROR
-                if (self.value==LogycaStatusEnum.Invalid_Argument):     return HTTPStatus.BAD_REQUEST
-                if (self.value==LogycaStatusEnum.DeadLine_Exceeded):    return HTTPStatus.GATEWAY_TIMEOUT
-                if (self.value==LogycaStatusEnum.Not_Found):            return HTTPStatus.NOT_FOUND
-                if (self.value==LogycaStatusEnum.Already_Exists):       return HTTPStatus.CONFLICT
-                if (self.value==LogycaStatusEnum.Permission_Denied):    return HTTPStatus.FORBIDDEN
-                if (self.value==LogycaStatusEnum.Resource_Exhausted):   return HTTPStatus.TOO_MANY_REQUESTS
-                if (self.value==LogycaStatusEnum.Failed_Condition):     return HTTPStatus.BAD_REQUEST
-                if (self.value==LogycaStatusEnum.Aborted):              return HTTPStatus.CONFLICT
-                if (self.value==LogycaStatusEnum.Out_Of_Range):         return HTTPStatus.BAD_REQUEST
-                if (self.value==LogycaStatusEnum.UnImplemented):        return HTTPStatus.NOT_IMPLEMENTED
-                if (self.value==LogycaStatusEnum.Internal):             return HTTPStatus.INTERNAL_SERVER_ERROR
-                if (self.value==LogycaStatusEnum.UnAvailable):          return HTTPStatus.SERVICE_UNAVAILABLE
-                if (self.value==LogycaStatusEnum.DataLoss):             return HTTPStatus.INTERNAL_SERVER_ERROR
-                if (self.value==LogycaStatusEnum.UnAuthenticated):      return HTTPStatus.UNAUTHORIZED
-                if (self.value==LogycaStatusEnum.Partial):              return HTTPStatus.ACCEPTED
-                if (self.value==LogycaStatusEnum.Created):              return HTTPStatus.CREATED
-                if (self.value==LogycaStatusEnum.InProcess):            return HTTPStatus.ACCEPTED
-                return HTTPStatus.NOT_FOUND
+                if (self.value==LogycaStatusEnum.Ok):                   return HTTP_200_OK
+                if (self.value==LogycaStatusEnum.Cancelled):            return HTTP_404_NOT_FOUND
+                if (self.value==LogycaStatusEnum.Unknown):              return HTTP_500_INTERNAL_SERVER_ERROR
+                if (self.value==LogycaStatusEnum.Invalid_Argument):     return HTTP_400_BAD_REQUEST
+                if (self.value==LogycaStatusEnum.DeadLine_Exceeded):    return HTTP_504_GATEWAY_TIMEOUT
+                if (self.value==LogycaStatusEnum.Not_Found):            return HTTP_404_NOT_FOUND
+                if (self.value==LogycaStatusEnum.Already_Exists):       return HTTP_409_CONFLICT
+                if (self.value==LogycaStatusEnum.Permission_Denied):    return HTTP_403_FORBIDDEN
+                if (self.value==LogycaStatusEnum.Resource_Exhausted):   return HTTP_429_TOO_MANY_REQUESTS
+                if (self.value==LogycaStatusEnum.Failed_Condition):     return HTTP_400_BAD_REQUEST
+                if (self.value==LogycaStatusEnum.Aborted):              return HTTP_409_CONFLICT
+                if (self.value==LogycaStatusEnum.Out_Of_Range):         return HTTP_400_BAD_REQUEST
+                if (self.value==LogycaStatusEnum.UnImplemented):        return HTTP_501_NOT_IMPLEMENTED
+                if (self.value==LogycaStatusEnum.Internal):             return HTTP_500_INTERNAL_SERVER_ERROR
+                if (self.value==LogycaStatusEnum.UnAvailable):          return HTTP_503_SERVICE_UNAVAILABLE
+                if (self.value==LogycaStatusEnum.DataLoss):             return HTTP_500_INTERNAL_SERVER_ERROR
+                if (self.value==LogycaStatusEnum.UnAuthenticated):      return HTTP_401_UNAUTHORIZED
+                if (self.value==LogycaStatusEnum.Partial):              return HTTP_202_ACCEPTED
+                if (self.value==LogycaStatusEnum.Created):              return HTTP_201_CREATED
+                if (self.value==LogycaStatusEnum.InProcess):            return HTTP_202_ACCEPTED
+                return HTTP_404_NOT_FOUND
+
+        @classmethod
+        def from_http_status_code(cls, http_status_code):
+            status_mapping = {
+                HTTP_200_OK: LogycaStatusEnum.Ok,
+                HTTP_201_CREATED: LogycaStatusEnum.Created,
+                HTTP_202_ACCEPTED: LogycaStatusEnum.Partial,
+                HTTP_400_BAD_REQUEST: LogycaStatusEnum.Invalid_Argument,
+                HTTP_401_UNAUTHORIZED: LogycaStatusEnum.UnAuthenticated,
+                HTTP_403_FORBIDDEN: LogycaStatusEnum.Permission_Denied,
+                HTTP_404_NOT_FOUND: LogycaStatusEnum.Not_Found,
+                HTTP_409_CONFLICT: LogycaStatusEnum.Already_Exists,
+                HTTP_429_TOO_MANY_REQUESTS: LogycaStatusEnum.Resource_Exhausted,
+                HTTP_500_INTERNAL_SERVER_ERROR: LogycaStatusEnum.Internal,
+                HTTP_501_NOT_IMPLEMENTED: LogycaStatusEnum.UnImplemented,
+                HTTP_503_SERVICE_UNAVAILABLE: LogycaStatusEnum.UnAvailable,
+                HTTP_504_GATEWAY_TIMEOUT: LogycaStatusEnum.DeadLine_Exceeded,
+            }
+            return status_mapping.get(http_status_code, LogycaStatusEnum.Not_Found)
+

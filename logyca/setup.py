@@ -3,9 +3,9 @@ from setuptools import setup, find_packages
 
 COMPANY_NAME="LOGYCA"
 PACKAGE_NAME = "logyca"
-VERSION = "0.1.14"
+VERSION = "0.1.15"
 
-install_requires = ["pydantic>=1.8","pytz>=2023.3"]
+install_requires = ["pydantic>=1.8","pytz>=2023.3","starlette>=0.24.0"]
 install_requires_fastapi = ["fastapi>=0.96.0","starlette>=0.24.0"]
 install_requires_oauth_token = install_requires_fastapi + ["aiohttp>=3.8.5","PyJWT>=2.7.0"]
 install_requires_api_key_simple_auth = install_requires_fastapi
