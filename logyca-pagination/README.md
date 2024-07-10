@@ -83,3 +83,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Completion of testing and launch into production.
 
+## [0.1.1] - 2024-07-09
+### Fixed
+- Fixed bug of filter attributes.
+### Added
+- Sample for filter attributes.
+

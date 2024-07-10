@@ -1,4 +1,4 @@
-logyca-pagination==0.1.0
+logyca-pagination==0.1.1
 logyca-postgres==0.1.3
 psycopg2==2.9.6
 pydantic==2.6.3

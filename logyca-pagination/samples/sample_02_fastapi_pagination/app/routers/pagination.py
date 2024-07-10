@@ -75,6 +75,23 @@ def get_data_by_purchaser(purchaser:str="",params:PaginationParameters = Depends
         aPIResultDTO.resultMessage=str(e)
         raise HTTPException(status_code=500, detail=jsonable_encoder(aPIResultDTO))
 
+@router.get("/purchaser_filter_attributes/")
+def get_data_by_purchaser_with_filter_attributes(purchaser:str="",params:PaginationParameters = Depends(), connection_session: Session = Depends(conn_sync_session)):
+    aPIResultDTO=APIResultDTO()
+    try:
+        if purchaser == "":
+            query = select(Pagination.id,Pagination.created_at)
+        else:
+            purchaser=f"%{purchaser.strip()}%"
+            purchaser=purchaser.replace(" ","%")
+            query = select(Pagination.id,Pagination.created_at).filter(Pagination.purchaser.ilike(purchaser)).order_by(Pagination.id)
+        aPIResultDTO.resultObject=pagination_mgr.query_pagination(query,connection_session,params)
+        return JSONResponse(content=jsonable_encoder(aPIResultDTO))
+    except Exception as e:
+        aPIResultDTO.dataError=True
+        aPIResultDTO.resultMessage=str(e)
+        raise HTTPException(status_code=500, detail=jsonable_encoder(aPIResultDTO))
+
 @router.get("/created_at/")
 def get_data_by_created_at_date(start_date:str = "2021-06-18", end_date:str = "2021-06-18",params:PaginationParameters = Depends(), connection_session: Session = Depends(conn_sync_session)):
     aPIResultDTO=APIResultDTO()

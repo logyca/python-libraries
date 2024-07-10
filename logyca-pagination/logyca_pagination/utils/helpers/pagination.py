@@ -38,25 +38,6 @@ class PaginationManager:
         :param page_size_limit(int): Used to not allow pages that are too large. Default 50."""
         self.page_size_limit=page_size_limit
 
-    def instance_sqlalchemy_to_dict(self,instance)->dict:
-        '''Description
-        Return standard dict of object
-        ```python
-        from sqlalchemy.orm import declarative_base
-        Base = declarative_base()
-        class instance(Base):
-            __tablename__ = 'my_table'
-            id = Column(Integer, primary_key=True)
-            attribute01 = Column(String)
-            atributo2 = Column(String)    
-        ```
-        '''
-        try:
-            attr_dict = {column.name: getattr(instance, column.name) for column in instance.__table__.columns}
-            return attr_dict
-        except:
-            return None
-
     def query_pagination(self,query:Select, connection_session:Session, params:PaginationParameters=PaginationParameters(),return_dict:bool=True,page_size_limit:int=None,count_records:bool=True)->Page|dict:
             """Description
             If there are too many records, it is recommended that the frontend the first time when creating the grid request page 1 with count_records=True to capture total_pages and total_records; The following page views with count_records=False.
@@ -93,10 +74,6 @@ class PaginationManager:
                 if params.page_size > page_size_limit:
                     raise ValueError(PaginationManagerExceptionErrors.VERY_LARGE_PAGE_SIZE.format(page_size_limit))
             
-            # Paginate query
-            offset = (params.page - 1) * params.page_size
-            paginate_query = query.offset(offset).limit(params.page_size)
-            items = [self.instance_sqlalchemy_to_dict(item) for item in connection_session.execute(paginate_query).scalars()]
             # Count
             if count_records:
                 query_for_count_registries = select(func.count()).select_from(query.subquery())
@@ -105,7 +82,27 @@ class PaginationManager:
             else:
                 total_records=-1
                 total_pages=-1
-
+            # Paginate query
+            offset = (params.page - 1) * params.page_size
+            paginate_query = query.offset(offset).limit(params.page_size)
+            item_dict = {}
+            items = []
+            is_dict=False
+            columns = [col.key for col in query.columns]            
+            for row in connection_session.execute(paginate_query).all():
+                column_i=0
+                for value in row:
+                    if hasattr(value, '_sa_instance_state'):
+                        data = value.__dict__
+                        del data["_sa_instance_state"]
+                        items.append(data)
+                    else:
+                        item_dict[columns[column_i]]=value
+                        column_i=column_i+1
+                        is_dict=True
+                if is_dict:
+                    items.append(item_dict)
+                    item_dict = {}
             page_dictionary={
                 "items": items,
                 "page_size": params.page_size,
