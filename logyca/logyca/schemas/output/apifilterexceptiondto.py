@@ -14,3 +14,5 @@ class ApiFilterExceptionDTO(BaseModel):
                 kwargs['message'] = ''
                 kwargs['status'] = HTTPStatus.OK
                 super().__init__(**kwargs)
+        def to_dict(self):
+                return self.__dict__

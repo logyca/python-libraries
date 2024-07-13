@@ -6,3 +6,5 @@ class TokensDTO(BaseModel):
     result:str=Field(default='',description="Gets or sets result request")
     emailActiveDirectory:str=Field(default='',description="Gets or sets email Active Directory")
     message:str=Field(default='',description="Gets or sets user message")
+    def to_dict(self):
+            return self.__dict__

@@ -377,3 +377,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Updated LogycaStatusEnum for starlette library use
 - Correction of exception handlers.
+
+## [0.1.16] - 2024-07-12
+### Added
+- For object classes like APIResultDTO and others, the to_dict() function is added to be able to serialize the attributes to json in a simple way.
+- Added object serialization example.

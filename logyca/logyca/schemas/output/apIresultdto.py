@@ -14,11 +14,25 @@ class APIResultDTO(BaseModel):
                 kwargs['dataError'] = False
                 kwargs['apiException'] = ApiFilterExceptionDTO()
                 super().__init__(**kwargs)
+        def to_dict(self):
+                aPIResultDTO=self.__dict__.copy()
+                aPIResultDTO["resultToken"]=aPIResultDTO["resultToken"].to_dict()
+                aPIResultDTO["apiException"]=aPIResultDTO["apiException"].to_dict()
+                return aPIResultDTO
 
 class ValidationError(BaseModel):
         detailError: str = Field(default="")
         transactionId: str = Field(default="")
+        def to_dict(self):
+                return self.__dict__        
 
 class APIResultDTOExternal(APIResultDTO):
         validationErrors: list[ValidationError] | None = Field(default=[])
         traceAbilityId: UUID  = Field(default=uuid4)
+        def to_dict(self):
+                aPIResultDTO=self.__dict__.copy()
+                aPIResultDTO["resultToken"]=aPIResultDTO["resultToken"].to_dict()
+                aPIResultDTO["apiException"]=aPIResultDTO["apiException"].to_dict()
+                aPIResultDTO["traceAbilityId"]=str(aPIResultDTO["traceAbilityId"])
+                aPIResultDTO["validationErrors"]=[validationError.to_dict() for validationError in aPIResultDTO["validationErrors"]]
+                return aPIResultDTO

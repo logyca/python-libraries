@@ -15,3 +15,5 @@ class HealthDTO():
         self.name = name
         self.status = status
         self.description = description
+    def to_dict(self):
+            return self.__dict__
