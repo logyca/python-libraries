@@ -2,12 +2,14 @@ from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError
 from azure.storage.blob import (
     BlobBlock,
     BlobClient,
+    BlobPrefix,
     BlobProperties,
     BlobSasPermissions,
     BlobServiceClient,
     ContentSettings,
     generate_blob_sas,
     )
+from datetime import datetime, timedelta, timezone
 from enum import StrEnum
 import datetime, hashlib, json, math, os, re, time, uuid
 
@@ -205,10 +207,13 @@ class AzureStorageAccountBlobManagement:
     #############################################
     # BlockBlob Zone
 
-    def container_blob_list(self,container_name:str)->list[BlobProperties]:
+    def container_blob_list(self,container_name:str,container_folders:list[str]=[],include_subfolders:bool=True,modified_minutes_ago:int=None)->list[BlobProperties]:
         '''Description
-        :param container_name:str   : Name of container.
-        :return list                : list of blobs in container name.
+        Lists the files in a container and its subfolders, returning their properties.
+        :param container_name:str       : Name of container.
+        :param include_subfolders:bool  : Return results from subfolders or only in the defined folder. 
+        :param modified_minutes_ago:int : If it is not null but a number, files modified more than x minutes ago will be returned.
+        :return list                    : list of blobs in container name.
 
         ## Example
         ```Python
@@ -230,10 +235,37 @@ class AzureStorageAccountBlobManagement:
             print(blob_list)
         ```
         '''
-        try:
+        try:            
             container_name=str(container_name)
             container_client = self.__service_client_conn.get_container_client(container_name)
-            return [blob for blob in container_client.list_blobs()]
+            if len(container_folders)==0:
+                blob_list = [blob for blob in container_client.walk_blobs(delimiter='/')]
+                container_client.dep                
+            else:
+                path_blob = "/".join(container_folders)
+                blob_list = [blob for blob in container_client.list_blobs(name_starts_with=path_blob)]
+            if include_subfolders is True and modified_minutes_ago is None:
+                return blob_list
+            else:
+                now = datetime.datetime.now(timezone.utc)
+                blob_filter_list=[]
+                for blob in blob_list:
+                    if isinstance(blob, BlobPrefix):
+                        print(blob.name)
+                for blob in blob_list:
+                    analyze_item=True
+                    if include_subfolders is False:
+                        subfolders_len=len(blob.name.split("/"))-1
+                        if len(container_folders) != subfolders_len:
+                            analyze_item=False                    
+                    if analyze_item is True:
+                        if modified_minutes_ago is None:
+                            blob_filter_list.append(blob)
+                        else:
+                            time_diff = now - blob.last_modified
+                            if time_diff > timedelta(minutes=modified_minutes_ago):
+                                blob_filter_list.append(blob)
+                return blob_filter_list            
         except ResourceNotFoundError as ex:
             return str(ex)
         except Exception as e:
@@ -282,8 +314,8 @@ class AzureStorageAccountBlobManagement:
 
         ```
         '''
-        path_blob = "/".join(container_folders + [blob_file])
         try:
+            path_blob = "/".join(container_folders + [blob_file])
             container_name=str(container_name)
             container_client = self.__service_client_conn.get_container_client(container_name)
             blob_client = container_client.get_blob_client(path_blob)
@@ -630,39 +662,7 @@ class AzureStorageAccountBlobManagement:
         ## Examples
 
         ```Python
-        from jaanca_chronometer import Chronometer # pip install jaanca-chronometer
-        from logyca_azure_storage_blob import AzureStorageAccountBlobManagement, SetCredentialsConnectionString
-
-        asabm=AzureStorageAccountBlobManagement(SetCredentialsConnectionString(connection_string=""))
-        chronometer=Chronometer()
-
-        # Example 1 - Small file
-        # Container root path
-        file='upload.txt'
-        chronometer.start()
-        url=asabm.container_blob_get_url_sas_read_to_download("blob_file","container_name",expiry_days=1)
-        chronometer.stop()
-        if url is False:
-            print("There is an error or the blob file does not exist")
-        else:
-            print(f"url: {url}")
-            print(f"Elapsed time: {chronometer.get_elapsed_time()}")
-
-        # Example 2 - Small file
-        # Container and subfolders path
-        container_folders=["folder1","folder2"]
-        file='upload.txt'
-        chronometer.start()
-        url=asabm.container_blob_get_url_sas_read_to_download("blob_file","container_name",container_folders,expiry_days=1)
-        chronometer.stop()
-        if url is False:
-            print("There is an error or the blob file does not exist")
-        else:
-            print(f"url: {url}")
-            print(f"Elapsed time: {chronometer.get_elapsed_time()}")
-
-
-
+        import os
         ```
 
         # References

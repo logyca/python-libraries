@@ -167,3 +167,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Completion of testing and launch into production.
 
+## [0.1.2] - 2024-07-18
+### Changed
+- Two filter sa container blob list are added. modified hours ago to return modified blobs after x hours and include_subfolders to return only blobs from the received folder list.
+

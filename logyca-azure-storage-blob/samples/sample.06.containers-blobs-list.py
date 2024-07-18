@@ -1,21 +1,32 @@
 from app.internal.config import settings
 from app.utils.constants.settings import App
 from azure.storage.blob import BlobProperties
+import json
 from logyca_azure_storage_blob import AzureStorageAccountBlobManagement, SetCredentialsConnectionString
 
 asabm=AzureStorageAccountBlobManagement(SetCredentialsConnectionString(connection_string=settings.connection_string))
-blob_list=asabm.container_blob_list(App.AzureStorageAccount.Containers.NAME_WITH_DATA)
-if(isinstance(blob_list,list)):
-    for blob in blob_list:
-        blob_properties:BlobProperties = blob
-        print("----------------------")
-        print(f"name: {blob_properties.name}")
-        print(f"size: {blob_properties.size} bytes")
-        print(f"content_md5: {blob_properties.content_settings.content_md5}")
-        print(f"last_modified: {blob_properties.last_modified}")
-        print(f"blob_type: {blob_properties.blob_type}")
-else:
-    print(blob_list)
+#################
+# root folder
+# blob_list=asabm.container_blob_list(App.AzureStorageAccount.Containers.NAME_WITH_DATA,include_subfolders=False)
+#################
+# subfolders
+# container_folders=["logs","logs1"]
+# blob_list=asabm.container_blob_list(App.AzureStorageAccount.Containers.NAME_WITH_DATA,container_folders=container_folders)
+#################
+# modified_hours_ago
+container="fecha1"
+container_folders=["other"]
+blob_list=asabm.container_blob_list(container,container_folders=container_folders,include_subfolders=False,modified_minutes_ago=2)
+for blob in blob_list:
+    blob_properties:BlobProperties = blob
+    print("----------------------")
+    print(f"name: {blob_properties.name}")
+    print(f"size: {blob_properties.size} bytes")
+    print(f"content_md5: {blob_properties.content_settings.content_md5}")
+    print(f"last_modified: {blob_properties.last_modified}")
+    print(f"blob_type: {blob_properties.blob_type}")
+    # print(json.dumps(blob_properties.__dict__,indent=4,default=str))
+
     # Folders and subfolders
     # ----------------------
     # name: 20240126084440-backup.backup
