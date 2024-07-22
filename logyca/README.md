@@ -382,3 +382,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - For object classes like APIResultDTO and others, the to_dict() function is added to be able to serialize the attributes to json in a simple way.
 - Added object serialization example.
+
+## [0.1.17] - 2024-07-22
+### Fixed
+- APIResultDTO fixes the data=False error external of the __init__ constructor.

@@ -9,9 +9,8 @@ class APIResultDTO(BaseModel):
         resultObject:Any=Field(default=None,description="Gets or sets object with result")
         apiException:ApiFilterExceptionDTO=Field(description="Gets or sets error")
         resultMessage:str=Field(default='',description="Gets or sets result of negative or positive message")
-        dataError:bool=Field(default=True,description="Gets or sets a value indicating whether gets or sets a value if it is data error")
+        dataError:bool=Field(default=False,description="Gets or sets a value indicating whether gets or sets a value if it is data error")
         def __init__(self, **kwargs):
-                kwargs['dataError'] = False
                 kwargs['apiException'] = ApiFilterExceptionDTO()
                 super().__init__(**kwargs)
         def to_dict(self):
