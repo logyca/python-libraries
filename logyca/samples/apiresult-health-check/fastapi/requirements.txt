@@ -1,0 +1,3 @@
+fastapi==0.111.0
+logyca[api_key_simple_auth]==0.1.17
+starlette==0.38.2
