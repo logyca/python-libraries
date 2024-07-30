@@ -37,11 +37,12 @@ def simulate_service():
     difference_in_days = days_between_dates(APP_REGISTRATION_CLIENT_SECRET_EXPIRES_VALUE,APP_REGISTRATION_CLIENT_SECRET_EXPIRES_FORMAT)
     if difference_in_days <= 30:
         listHealth.append(HealthDTO(name=f'Expiration days for {APP_REGISTRATION_CLIENT_SECRET_NAME}: [{difference_in_days}]',status=HealthEnum.Critical,description='Critical').to_dict())
+        exist_alert=True
     elif difference_in_days <= 60:
         listHealth.append(HealthDTO(name=f'Expiration days for {APP_REGISTRATION_CLIENT_SECRET_NAME}: [{difference_in_days}]',status=HealthEnum.Warning,description='Warning').to_dict())
+        exist_alert=True
     else:
         listHealth.append(HealthDTO(name=f'Expiration days for {APP_REGISTRATION_CLIENT_SECRET_NAME}: [{difference_in_days}]',status=HealthEnum.Ok,description='Ok').to_dict())
-    exist_alert=True
 
     apiResultDTO=APIResultDTO()
     apiResultDTO.resultMessage='Health check'
