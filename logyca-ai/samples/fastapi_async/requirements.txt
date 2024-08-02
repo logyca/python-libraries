@@ -1,0 +1,6 @@
+fastapi==0.111.0
+logyca[api_key_simple_auth]==0.1.17
+openai==1.37.1
+pydantic==2.6.3
+python-dotenv==1.0.1
+starlette==0.38.2
