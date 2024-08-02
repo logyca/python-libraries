@@ -1,37 +1,38 @@
-from app.utils.schemes.input.conversations import (
+from logyca_ai.utils.schemes.input.conversations import (
     AssistantMessage,
     Content,
     ImageMessage,
     PDFMessage,
     UserMessage,
 )
-from app.utils.constants.content import ContentType
-from app.utils.constants.image import ImageResolution
-from app.utils.schemes.input.content_base64_image_sample import image_base64_sample
-from app.utils.schemes.input.content_base64_pdf_sample import pdf_base64_sample
+from logyca_ai.utils.constants.content import ContentType
+from logyca_ai.utils.constants.image import ImageResolution
+from logyca_ai.assets_for_examples.file_or_documents.image_base64 import image_base64_sample
+from logyca_ai.assets_for_examples.file_or_documents.pdf_base64 import pdf_base64_sample
 
-content_simple_example = Content(
-    system="""
-                Voy a definirte tu personalidad, contexto y proposito.
-                Actua como un experto en venta de frutas.
-                Se muy positivo.
-                Trata a las personas de usted, nunca tutees sin importar como te escriban.
-            """.strip(),
-    messages=[
-        UserMessage(user="Dime 5 frutas amarillas"),
-        AssistantMessage(assistant="""
-                ¡Claro! Aquí te van 5 frutas amarillas:
+def get_content_simple_sample()->Content:
+    return = Content(
+        system="""
+                    Voy a definirte tu personalidad, contexto y proposito.
+                    Actua como un experto en venta de frutas.
+                    Se muy positivo.
+                    Trata a las personas de usted, nunca tutees sin importar como te escriban.
+                """.strip(),
+        messages=[
+            UserMessage(user="Dime 5 frutas amarillas"),
+            AssistantMessage(assistant="""
+                    ¡Claro! Aquí te van 5 frutas amarillas:
 
-                1. Plátano
-                2. Piña
-                3. Mango
-                4. Melón
-                5. Papaya
-            """
-        ),
-        UserMessage(user="Dame los nombres en ingles."),
-    ]
-    )
+                    1. Plátano
+                    2. Piña
+                    3. Mango
+                    4. Melón
+                    5. Papaya
+                """
+            ),
+            UserMessage(user="Dame los nombres en ingles."),
+        ]
+        )
 
 def get_content_image_sample(image_sample_base64:bool=False)->Content:
     image_resolution=str(ImageResolution.AUTO)
@@ -40,7 +41,7 @@ def get_content_image_sample(image_sample_base64:bool=False)->Content:
         image_format="png"
         type_message=ContentType.IMAGE_BASE64
     else:
-        base64_content_or_url="https://***/public/imagen.png"
+        base64_content_or_url="https://raw.githubusercontent.com/logyca/python-libraries/main/logyca-ai/samples/assets_for_conversations/file_or_documents/imagen.png"
         image_format=ContentType.IMAGE_URL
         type_message=ContentType.IMAGE_URL
     return Content(
@@ -68,7 +69,7 @@ def get_content_pdf_sample(pdf_sample_base64:bool=False)->Content:
         pdf_format="pdf"
         type_message=ContentType.PDF_BASE64
     else:
-        base64_content_or_url="https://***/Registro_sanitario_7702007075540_RS.pdf"
+        base64_content_or_url="https://raw.githubusercontent.com/logyca/python-libraries/main/logyca-ai/samples/assets_for_conversations/file_or_documents/Registro_sanitario_7702007075540_RS.pdf"
         pdf_format=ContentType.PDF_URL
         type_message=ContentType.PDF_URL
     return Content(

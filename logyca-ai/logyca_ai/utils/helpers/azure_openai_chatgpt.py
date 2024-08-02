@@ -1,7 +1,7 @@
-from app.utils.constants.content import ContentType, ContentRole
-from app.utils.schemes.input.conversations import Content, UserMessage, ImageMessage, PDFMessage
-from app.utils.schemes.output.conversations import ConversationAnswer, ConversationUsage
-from openai import AsyncAzureOpenAI
+from logyca_ai.utils.constants.content import ContentRole
+from logyca_ai.utils.schemes.input.conversations import Content, ImageMessage, PDFMessage
+from logyca_ai.utils.schemes.output.conversations import ConversationAnswer, ConversationUsage
+from logyca_ai.utils.helpers.azure_openai_chatgpt import AsyncAzureOpenAI
 from openai.types.completion_usage import CompletionUsage
 from starlette import status as http_status
 

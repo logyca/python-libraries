@@ -1,6 +1,6 @@
-from app.utils.constants.content import ContentType, ContentRole
-from app.utils.constants.image import ImageResolution
-from app.utils.helpers.content_loaders import url_file_to_base64, extract_text_from_pdf_base64
+from logyca_ai.utils.constants.content import ContentType, ContentRole
+from logyca_ai.utils.constants.image import ImageResolution
+from logyca_ai.utils.helpers.content_loaders import url_file_to_base64, extract_text_from_pdf_base64
 from pydantic import BaseModel, AliasChoices, Field, model_validator
 from typing import Any
 
