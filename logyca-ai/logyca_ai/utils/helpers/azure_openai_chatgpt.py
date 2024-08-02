@@ -1,14 +1,19 @@
 from logyca_ai.utils.constants.content import ContentRole
 from logyca_ai.utils.schemes.input.conversations import Content, ImageMessage, PDFMessage
 from logyca_ai.utils.schemes.output.conversations import ConversationAnswer, ConversationUsage
-from logyca_ai.utils.helpers.azure_openai_chatgpt import AsyncAzureOpenAI
+from openai import AsyncAzureOpenAI, AzureOpenAI
 from openai.types.completion_usage import CompletionUsage
 from starlette import status as http_status
 
 class AzureOpenAIChatGPT():
 
     def __init__(self,azure_endpoint:str,api_key:str,api_version:str) -> None:
-        self.client = AsyncAzureOpenAI(
+        self.async_client = AsyncAzureOpenAI(
+            azure_endpoint=f"https://{azure_endpoint}.openai.azure.com",
+            api_key=api_key,
+            api_version=api_version
+        )
+        self.sync_client = AzureOpenAI(
             azure_endpoint=f"https://{azure_endpoint}.openai.azure.com",
             api_key=api_key,
             api_version=api_version
@@ -36,6 +41,8 @@ class AzureOpenAIChatGPT():
             messages.append({"role":str(ContentRole.SYSTEM),"content":content.system})
 
         for message in content.messages:
+            if isinstance(message,dict) is False:
+                message=message.to_dict()
             assistant_message = message.get(ContentRole.ASSISTANT,None)
             if assistant_message is not None:
                 messages.append({"role":str(ContentRole.ASSISTANT),"content":assistant_message})
@@ -79,7 +86,41 @@ class AzureOpenAIChatGPT():
         
         """
         try:
-            completion = await self.client.chat.completions.create(
+            completion = await self.async_client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=temperature, # The closer you get to 1 the answer changes, if you want the same answer you should get closer to zero
+                max_tokens=limit_tokens_answer,
+                top_p=top_p, # 0.1 means only the tokens comprising the top 10% probability mass are considered. Default 1 => 100% probability mass are considered
+                frequency_penalty=0,
+                presence_penalty=0,
+                stop=None
+            )
+            response=completion.model_dump()
+            usage:CompletionUsage = completion.usage
+            conversation_response = ConversationAnswer()
+            conversation_response.assistant = str(response['choices'][0]['message']['content']).strip()
+            conversation_response.usage_data = ConversationUsage(**usage.__dict__)
+            return http_status.HTTP_200_OK,conversation_response
+        except Exception as e:
+            return http_status.HTTP_429_TOO_MANY_REQUESTS,str(e)
+
+    def conversation_sync(self,
+        model:str,
+        messages:list,
+        limit_tokens_answer:int=4000,
+        temperature:float=0.7,
+        top_p:float=0.95)->tuple[int,ConversationAnswer]:
+        """Description
+        :return int,str: Http Status Code Response, Message
+        
+        References:
+
+        - https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/migration
+        
+        """
+        try:
+            completion = self.sync_client.chat.completions.create(
                 model=model,
                 messages=messages,
                 temperature=temperature, # The closer you get to 1 the answer changes, if you want the same answer you should get closer to zero

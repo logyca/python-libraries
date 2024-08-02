@@ -17,7 +17,9 @@ class Content(BaseModel):
         return values
 
     def to_dict(self)->dict:
-        return self.__dict__
+        tmp = self.__dict__.copy()
+        tmp["messages"] = [message.to_dict() for message in tmp["messages"]]
+        return tmp
 
 class UserMessage(BaseModel):
     additional_content: Any = Field(default="",validation_alias=AliasChoices("additional_content"))

@@ -33,11 +33,124 @@
 | [Package (PyPI)](https://pypi.org/project/logyca-ai/)
 | [Samples](https://github.com/logyca/python-libraries/tree/main/logyca-ai/samples)
 
+
+## To interact with the examples, keep the following in mind
+
+FastAPI example. Through Swagger, you can:
+- https://github.com/logyca/python-libraries/tree/main/logyca-ai/samples/fastapi_async
+- Use the example endpoints to obtain the input schemas for the post method and interact with the available parameters.
+- Endpoint publishing is asynchronous of openai SDK.
+- The model used is ChatGPT-4o for testing.
+
+Script example. Through of code, you can:
+- https://github.com/logyca/python-libraries/tree/main/logyca-ai/samples/script_app_sync
+- Examples shared with the example written in FastAPI.
+- The examples use synchronous functionality of openai SDK.
+- The model used is ChatGPT-4o for testing.
+
 ---
 
-Samples
+# Example for simple conversation.
 
-https://github.com/logyca/python-libraries/tree/main/logyca-ai/samples
+```json
+{
+  "system": "Voy a definirte tu personalidad, contexto y proposito.\nActua como un experto en venta de frutas.\nSe muy positivo.\nTrata a las personas de usted, nunca tutees sin importar como te escriban.",
+  "messages": [
+    {
+      "additional_content": "",
+      "type": "text",
+      "user": "Dime 5 frutas amarillas"
+    },
+    {
+      "assistant": "\n¡Claro! Aquí te van 5 frutas amarillas:\n\n1. Plátano\n2. Piña\n3. Mango\n4. Melón\n5. Papaya\n"
+    },
+    {
+      "additional_content": "",
+      "type": "text",
+      "user": "Dame los nombres en ingles."
+    }
+  ]
+}
+```
+
+---
+
+# Example for image conversation.
+
+## Using public published URL for image
+```json
+{
+  "system": "Actua como una maquina lectora de imagenes.\nDevuelve la información sin lenguaje natural, sólo responde lo que se está solicitando.\nEl dispositivo que va a interactuar contigo es una api, y necesita la información sin markdown u otros caracteres especiales.",
+  "messages": [
+    {
+      "additional_content": {
+        "base64_content_or_url": "https://raw.githubusercontent.com/logyca/python-libraries/3d91b5a93fb1219804753ce233fabd5f635662d3/logyca-ai/logyca_ai/assets_for_examples/file_or_documents/image.png",
+        "image_format": "image_url",
+        "image_resolution": "auto"
+      },
+      "type": "image_url",
+      "user": "Extrae el texto que recibas en la imagen y devuelvelo en formato json."
+    }
+  ]
+}
+```
+
+## Using image content in base64
+```json
+{
+  "system": "Actua como una maquina lectora de imagenes.\nDevuelve la información sin lenguaje natural, sólo responde lo que se está solicitando.\nEl dispositivo que va a interactuar contigo es una api, y necesita la información sin markdown u otros caracteres especiales.",
+  "messages": [
+    {
+      "additional_content": {
+        "base64_content_or_url": "<base64 image png content>",
+        "image_format": "png",
+        "image_resolution": "auto"
+      },
+      "type": "image_base64",
+      "user": "Extrae el texto que recibas en la imagen y devuelvelo en formato json."
+    }
+  ]
+}
+```
+
+---
+
+# Example for pdf conversation.
+
+## Using public published URL for pdf
+```json
+{
+  "system": "No uses lenguaje natural para la respuesta.\nDame la información que puedas extraer de la imagen en formato JSON.\nSolo devuelve la información, no formatees con caracteres adicionales la respuesta.",
+  "messages": [
+    {
+      "additional_content": {
+        "base64_content_or_url": "https://raw.githubusercontent.com/logyca/python-libraries/3d91b5a93fb1219804753ce233fabd5f635662d3/logyca-ai/logyca_ai/assets_for_examples/file_or_documents/pdf.pdf",
+        "pdf_format": "pdf_url"
+      },
+      "type": "pdf_url",
+      "user": "Dame los siguientes datos: Expediente, radicación, Fecha, Numero de registro, Vigencia."
+    }
+  ]
+}
+```
+
+## Using pdf content in base64
+```json
+{
+  "system": "No uses lenguaje natural para la respuesta.\nDame la información que puedas extraer de la imagen en formato JSON.\nSolo devuelve la información, no formatees con caracteres adicionales la respuesta.",
+  "messages": [
+    {
+      "additional_content": {
+        "base64_content_or_url": "<base64 pdf content>",
+        "pdf_format": "pdf"
+      },
+      "type": "pdf_base64",
+      "user": "Dame los siguientes datos: Expediente, radicación, Fecha, Numero de registro, Vigencia."
+    }
+  ]
+}
+```
+
 
 ---
 

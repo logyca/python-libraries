@@ -11,6 +11,7 @@ from logyca_ai import (
     PDFMessage,
     UserMessage,
 )
+
 from fastapi import Depends, APIRouter
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
@@ -63,27 +64,27 @@ async def conversation(content:Content, api_key: str = Depends(get_api_key)):
         aPIResultDTO.apiException.logycaStatus=LogycaStatusEnum.from_http_status_code(http_status)
         return JSONResponse(content=jsonable_encoder(aPIResultDTO.to_dict()),status_code=http_status)
 
-@router.get("/simple_example/",
+@router.get("/simple_sample/",
     responses={200:{'model':Content}},
     summary='Scheme example of conversation for endpoint',
     status_code=status.HTTP_200_OK
     )
-def simple_example(api_key: str = Depends(get_api_key)):
+def simple_sample(api_key: str = Depends(get_api_key)):
     return JSONResponse(content=jsonable_encoder(get_content_simple_sample().to_dict()),status_code=status.HTTP_200_OK)
 
-@router.get("/image_example/",
+@router.get("/image_sample/",
     responses={200:{'model':Content}},
     summary='Scheme example of conversation for endpoint',
     status_code=status.HTTP_200_OK
     )
-def image_example(image_sample_base64:bool=False,api_key: str = Depends(get_api_key)):    
+def simple_sample(image_sample_base64:bool=False,api_key: str = Depends(get_api_key)):    
     return JSONResponse(content=jsonable_encoder(get_content_image_sample(image_sample_base64).to_dict()),status_code=status.HTTP_200_OK)
 
-@router.get("/pdf_example/",
+@router.get("/pdf_sample/",
     responses={200:{'model':Content}},
     summary='Scheme example of conversation for endpoint',
     status_code=status.HTTP_200_OK
     )
-def pdf_example(pdf_sample_base64:bool=False,api_key: str = Depends(get_api_key)):    
+def pdf_sample(pdf_sample_base64:bool=False,api_key: str = Depends(get_api_key)):    
     return JSONResponse(content=jsonable_encoder(get_content_pdf_sample(pdf_sample_base64).to_dict()),status_code=status.HTTP_200_OK)
 

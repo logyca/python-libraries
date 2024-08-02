@@ -1,4 +1,5 @@
 fastapi==0.111.0
+logyca_ai==0.1.0
 logyca[api_key_simple_auth]==0.1.17
 openai==1.37.1
 pydantic==2.6.3
