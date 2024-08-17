@@ -3,9 +3,9 @@ from setuptools import setup, find_packages
 
 COMPANY_NAME="LOGYCA"
 PACKAGE_NAME = "logyca-ai"
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 
-install_requires = ["pydantic>=2.5","openai>=1.37.1","logyca>=0.1.17"]
+install_requires = ["pydantic>=2.5","openai>=1.37.1","logyca>=0.1.17","PyMuPDF>=1.23.2","pillow>=9.3.0","pytesseract>=0.3.9"]
 
 setup(
     name=PACKAGE_NAME,
@@ -17,7 +17,7 @@ setup(
     author='Jaime Andres Cardona Carrillo',
     author_email='jacardona@outlook.com',
     url='https://github.com/logyca/python-libraries/tree/main/logyca-ai',
-    keywords="azure, blob, storage, upload, download",
+    keywords="artificial-intelligence, machine-learning, deep-learning, chatgpt, nlp, language-models, openai, transformers, neural-networks, ai-tools, mlops, data-science, python, data-analysis, automation",
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",

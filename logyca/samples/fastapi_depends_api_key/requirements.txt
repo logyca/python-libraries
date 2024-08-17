@@ -1,3 +1,6 @@
-fastapi==0.111.0
-logyca[api_key_simple_auth]==0.1.17
-starlette==0.38.2
+aiohttp==3.9.5
+fastapi==0.110.1
+logyca[api_key_simple_auth]==0.1.18
+PyJWT==2.8.0
+starlette==0.37.2
+uvicorn==0.21.1

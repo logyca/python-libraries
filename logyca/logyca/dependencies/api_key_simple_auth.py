@@ -15,11 +15,11 @@ class APIKey:
     from logyca import APIKeyScheme, APIKey
     import os
 
-    APY_KEY=os.getenv('APY_KEY','password_key')
+    API_KEY=os.getenv('API_KEY','password_key')
 
     app = FastAPI()
 
-    settings_api_key=APIKeyScheme(key=APY_KEY, enable=True)
+    settings_api_key=APIKeyScheme(key=API_KEY, enable=True)
     get_api_key = APIKey(settings_api_key)
 
     @app.get("/data/")

@@ -1,8 +1,11 @@
 from logyca_ai.utils.constants.content import ContentType, ContentRole
 from logyca_ai.utils.constants.image import ImageResolution
-from logyca_ai.utils.helpers.content_loaders import url_file_to_base64, extract_text_from_pdf_base64
+from logyca_ai.utils.helpers.content_loaders import save_base64_to_file, save_file_from_url
+from logyca_ai.utils.helpers.general_utils import get_random_name_datetime, delete_files_by_modification_hours
+from logyca_ai.utils.helpers.text_extraction import extract_text_from_pdf_file
 from pydantic import BaseModel, AliasChoices, Field, model_validator
 from typing import Any
+import os
 
 class MessageExceptionErrors:
     UNSUPPORTED_IMAGE_FORMAT="Unsupported image format: {}"
@@ -139,10 +142,38 @@ class PDFMessage(BaseModel):
     def get_default_types(cls)->list:        
         return [ContentType.PDF_URL,ContentType.PDF_BASE64]
 
-    def build_message_content(self)->str|None:
+    def build_message_content(self,advanced_image_recognition:bool=False,ocr_engine_path:str=None,output_temp_dir:str=None,cleanup_output_temp_dir_after_hours: int = 24)->str|None:
+        """
+        Build the supported message list.
+
+        :param content: Content to send to chatgpt, which consists of system and messages.
+        :type content: str
+        :param advanced_image_recognition: (pdf for now) Indicates whether to perform text recognition on images within the files or documents.
+                                If True, OCR techniques will be used to extract text from images.
+        :type advanced_image_recognition: bool
+        :param ocr_engine_path: Path to the OCR executable. If provided, this path will be used instead of the default.
+        :type ocr_engine_path: str, optional
+        :param output_temp_dir: Temporary directory for storing output files.
+                                If not provided, a default tmp temporary directory in the application root folder will be used.
+        :type output_temp_dir: str, optional
+        :param cleanup_output_temp_dir_after_hours: Number of hours after which the files in the temporary directory will be deleted on the next call of the function.
+        :type cleanup_output_temp_dir_after_hours: int, optional
+
+        :return: Supported message list.
+        :rtype: str
+        """
+        if output_temp_dir is None: output_temp_dir=os.path.abspath(os.path.join(os.getcwd(),"tmp"))
+        if not os.path.exists(output_temp_dir):
+            os.makedirs(output_temp_dir)
+        delete_files_by_modification_hours(output_temp_dir,cleanup_output_temp_dir_after_hours)
+        pdf_filename = f"{get_random_name_datetime()}.pdf"
+        pdf_tmp_to_work = os.path.abspath(os.path.join(output_temp_dir,pdf_filename))
         if self.pdf_format == ContentType.PDF_URL:
-            pdf_text=extract_text_from_pdf_base64(url_file_to_base64(self.base64_content_or_url))
+            save_file_from_url(self.base64_content_or_url,output_temp_dir,pdf_filename)
+            pdf_text=extract_text_from_pdf_file(pdf_tmp_to_work,advanced_image_recognition=advanced_image_recognition,ocr_engine_path=ocr_engine_path,output_temp_dir=output_temp_dir)
         else:
-            pdf_text=extract_text_from_pdf_base64(self.base64_content_or_url)
+            save_base64_to_file(self.base64_content_or_url,output_temp_dir,pdf_filename)
+            pdf_text=extract_text_from_pdf_file(pdf_tmp_to_work,advanced_image_recognition=advanced_image_recognition,ocr_engine_path=ocr_engine_path,output_temp_dir=output_temp_dir)
+        os.remove(pdf_tmp_to_work)
         return pdf_text
    

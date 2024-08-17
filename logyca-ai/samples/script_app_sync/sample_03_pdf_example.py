@@ -14,7 +14,7 @@ if __name__ == "__main__":
     print(json.dumps(content.to_dict(),indent=4))
 
     chat=AzureOpenAIChatGPT(azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,api_key=settings.OPENAI_API_KEY,api_version=settings.OPENAI_API_VERSION)
-    messages = chat.build_conversation_message_list(content=content)
+    messages = chat.build_conversation_message_list(content=content,advanced_image_recognition=False)
     http_status,respond=chat.conversation_sync(model=settings.AZURE_OPENAI_DEPLOYMENT,messages=messages)
     aPIResultDTO=APIResultDTO()
     if http_status == status.HTTP_200_OK:

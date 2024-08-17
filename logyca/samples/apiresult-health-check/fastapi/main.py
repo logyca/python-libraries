@@ -15,7 +15,7 @@ import json
 import os
 
 # Load environment variables
-APY_KEY=os.getenv('APY_KEY','password_key')
+API_KEY=os.getenv('API_KEY','password_key')
 APP_REGISTRATION_CLIENT_ID=os.getenv('CLIENT_ID','0d71d9ad-f5b9-40f7-a575-e1aabedd1d00')
 APP_REGISTRATION_CLIENT_SECRET_NAME=os.getenv('CLIENT_SECRET_NAME','connect_test')
 APP_REGISTRATION_CLIENT_SECRET_VALUE=os.getenv('CLIENT_SECRET_VALUE','soksijsjuueje883j3j8djj3g44')
@@ -30,7 +30,7 @@ def days_between_dates(date_str:str='7/19/2026',date_format:str='%m/%d/%Y')->int
 
 app = FastAPI()
 
-settings_api_key=APIKeyScheme(key=APY_KEY, enable=True)
+settings_api_key=APIKeyScheme(key=API_KEY, enable=True)
 get_api_key = APIKey(settings_api_key)
 
 APP_CLIENT_SECRET_EXPIRE = '7/19/2026' # DD/MM/YYYY

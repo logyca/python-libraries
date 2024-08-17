@@ -19,18 +19,40 @@ class AzureOpenAIChatGPT():
             api_version=api_version
         )
     
-    def build_conversation_message_list(self,content:Content)->list:
-        """Description
-        
-        ### Example message list with conversation history
-        ```Python
-        messages=[
-                {"role":"system","content":""},
-                {"role":"user","content":""},
-                {"role":"assistant","content":""},
-                {"role":"user","content":""},
-                {"role":"assistant","content":""},
-        ]
+    def build_conversation_message_list(self,content:Content,advanced_image_recognition:bool=False,ocr_engine_path:str=None,output_temp_dir:str=None,cleanup_output_temp_dir_after_hours: int = 24)->list:
+        """
+        Build the supported message list.
+
+        :param content: Content to send to chatgpt, which consists of system and messages.
+        :type content: str
+        :param advanced_image_recognition: Indicates whether to perform text recognition on images within the files or documents.
+                                If True, OCR techniques will be used to extract text from images.
+        :type advanced_image_recognition: bool
+        :param ocr_engine_path: Path to the OCR executable. If provided, this path will be used instead of the default.
+        :type ocr_engine_path: str, optional
+        :param output_temp_dir: Temporary directory for storing output files.
+                                If not provided, a default tmp temporary directory in the application root folder will be used.
+        :type output_temp_dir: str, optional
+        :param cleanup_output_temp_dir_after_hours: Number of hours after which the files in the temporary directory will be deleted on the next call of the function.
+        :type cleanup_output_temp_dir_after_hours: int, optional
+
+        :return: Supported message list.
+        :rtype: str
+
+        :example:
+
+        ## Example usage
+        ```json
+        {
+            "system": "",
+            messages=[
+                    {"role":"system","content":""},
+                    {"role":"user","content":""},
+                    {"role":"assistant","content":""},
+                    {"role":"user","content":""},
+                    {"role":"assistant","content":""},
+            ]
+        }
         ```
         """
 
@@ -62,7 +84,7 @@ class AzureOpenAIChatGPT():
                     if type_message in PDFMessage.get_default_types():
                         additional_content = message.get("additional_content",None)
                         messages.append({"role":str(ContentRole.USER),"content":
-                            PDFMessage(**additional_content).build_message_content()
+                            PDFMessage(**additional_content).build_message_content(advanced_image_recognition=advanced_image_recognition,ocr_engine_path=ocr_engine_path,output_temp_dir=output_temp_dir,cleanup_output_temp_dir_after_hours=cleanup_output_temp_dir_after_hours)
                         })
 
                     if user_message is not None and user_message!="":

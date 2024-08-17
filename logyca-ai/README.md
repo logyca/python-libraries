@@ -50,6 +50,18 @@ Script example. Through of code, you can:
 
 ---
 
+# OCR engine to extract images.
+
+- Tesseract is an optical character recognition engine for various operating systems.
+  It is free software, released under the Apache License. Originally developed by Hewlett-Packard as proprietary software in the 1980s,
+  it was released as open source in 2005 and development was sponsored by Google in 2006
+
+## Install
+
+- (Source Code) https://tesseract-ocr.github.io/tessdoc/Downloads.html
+- (Windows Binaries) https://github.com/UB-Mannheim/tesseract/wiki
+- (Linux/Docker) apt-get -y install tesseract-ocr
+
 # Example for simple conversation.
 
 ```json
@@ -196,3 +208,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Completion of testing and launch into production.
 
+## [0.1.1] - 2024-08-16
+### Added
+- The functions of extracting text from PDF files are refactored, using disk to optimize the use of ram memory and methods are added to extract text from images within the pages of the PDF files.

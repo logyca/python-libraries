@@ -49,7 +49,7 @@ router = APIRouter(prefix="/api/v1/chatgpt/conversation", tags={"Azure ChatGPT4o
     )
 async def conversation(content:Content, api_key: str = Depends(get_api_key)):
     chat=AzureOpenAIChatGPT(azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,api_key=settings.OPENAI_API_KEY,api_version=settings.OPENAI_API_VERSION)
-    messages = chat.build_conversation_message_list(content=content)
+    messages = chat.build_conversation_message_list(content=content,advanced_image_recognition=False)
     http_status,respond=await chat.conversation_async(model=settings.AZURE_OPENAI_DEPLOYMENT,messages=messages)
     aPIResultDTO=APIResultDTO()
     if http_status == status.HTTP_200_OK:

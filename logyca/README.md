@@ -386,3 +386,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.17] - 2024-07-22
 ### Fixed
 - APIResultDTO fixes the data=False error external of the __init__ constructor.
+
+## [0.1.18] - 2024-08-16
+### Fixed
+- Example of auth apkey with dockerfile and dependencies that were missing when installing the library is added.
