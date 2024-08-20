@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 COMPANY_NAME="LOGYCA"
 PACKAGE_NAME = "logyca-pagination"
-VERSION = "0.1.1"
+VERSION = "0.1.2"
 
 install_requires = ["pydantic>=2.0.3","sqlalchemy>=2.0.6"]
 
@@ -17,7 +17,7 @@ setup(
     author='Jaime Andres Cardona Carrillo',
     author_email='jacardona@outlook.com',
     url='https://github.com/logyca/python-libraries/tree/main/logyca-pagination',
-    keywords="azure, blob, storage, upload, download",
+    keywords="pagination, serverless, backend, fastapi",
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
