@@ -6,9 +6,9 @@ from logyca_ai import (
     get_content_image_sample,
     get_content_pdf_sample,
     get_content_simple_sample,
-    ImageMessage,
+    ImageFileMessage,
     ImageResolution,
-    PDFMessage,
+    PdfFileMessage,
     UserMessage,
 )
 
@@ -35,12 +35,12 @@ router = APIRouter(prefix="/api/v1/chatgpt/conversation", tags={"Azure ChatGPT4o
             <li>Definitions for image files
                 <ul>
                     <li>Image resolutions: {ImageResolution.content_list()}</li>
-                    <li>Image supported formats: {ImageMessage.get_supported_formats()}.
+                    <li>Image supported formats: {ImageFileMessage.get_supported_formats()}.
                 </ul>
             </li>
             <li>Definitions for pdf files
                 <ul>
-                    <li>PDF supported formats: {PDFMessage.get_supported_formats()}.
+                    <li>PDF supported formats: {PdfFileMessage.get_supported_formats()}.
                 </ul>
             </li>
             <li>assistant: These messages contain the responses that the language model generates based on the previous messages in the conversation.</li>

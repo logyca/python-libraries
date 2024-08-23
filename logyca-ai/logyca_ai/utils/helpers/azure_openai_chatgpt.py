@@ -1,5 +1,5 @@
 from logyca_ai.utils.constants.content import ContentRole
-from logyca_ai.utils.schemes.input.conversations import Content, ImageMessage, PDFMessage
+from logyca_ai.utils.schemes.input.conversations import Content, ImageFileMessage, PdfFileMessage
 from logyca_ai.utils.schemes.output.conversations import ConversationAnswer, ConversationUsage
 from openai import AsyncAzureOpenAI, AzureOpenAI
 from openai.types.completion_usage import CompletionUsage
@@ -75,16 +75,16 @@ class AzureOpenAIChatGPT():
                 else:
                     type_message = message.get("type",None)                
 
-                    if type_message in ImageMessage.get_default_types():
+                    if type_message in ImageFileMessage.get_default_types():
                         additional_content = message.get("additional_content",None)
                         messages.append({"role":str(ContentRole.USER),"content":[
-                            ImageMessage(**additional_content).build_message_content()
+                            ImageFileMessage(**additional_content).build_message_content()
                         ]})
 
-                    if type_message in PDFMessage.get_default_types():
+                    if type_message in PdfFileMessage.get_default_types():
                         additional_content = message.get("additional_content",None)
                         messages.append({"role":str(ContentRole.USER),"content":
-                            PDFMessage(**additional_content).build_message_content(advanced_image_recognition=advanced_image_recognition,ocr_engine_path=ocr_engine_path,output_temp_dir=output_temp_dir,cleanup_output_temp_dir_after_hours=cleanup_output_temp_dir_after_hours)
+                            PdfFileMessage(**additional_content).build_message_content(advanced_image_recognition=advanced_image_recognition,ocr_engine_path=ocr_engine_path,output_temp_dir=output_temp_dir,cleanup_output_temp_dir_after_hours=cleanup_output_temp_dir_after_hours)
                         })
 
                     if user_message is not None and user_message!="":

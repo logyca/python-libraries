@@ -1,6 +1,6 @@
 from logyca_ai.utils.constants.content import ContentType, ContentRole
 from logyca_ai.utils.constants.image import ImageResolution
-from logyca_ai.utils.helpers.content_loaders import save_base64_to_file, save_file_from_url
+from logyca_ai.utils.helpers.content_loaders import save_base64_to_file, save_file_from_url, load_text_from_url, decode_base64_to_str
 from logyca_ai.utils.helpers.general_utils import get_random_name_datetime, delete_files_by_modification_hours
 from logyca_ai.utils.helpers.text_extraction import extract_text_from_pdf_file
 from pydantic import BaseModel, AliasChoices, Field, model_validator
@@ -9,7 +9,8 @@ import os
 
 class MessageExceptionErrors:
     UNSUPPORTED_IMAGE_FORMAT="Unsupported image format: {}"
-    UNSUPPORTED_PDF_FORMAT="Unsupported image format: {}"
+    UNSUPPORTED_PDF_FORMAT="Unsupported pdf format: {}"
+    UNSUPPORTED_FILE_FORMAT="Unsupported file format: {}"
 
 class Content(BaseModel):
     system: str = Field(default="Personality, context, purpose.",validation_alias=AliasChoices(ContentRole.SYSTEM))
@@ -54,7 +55,7 @@ class AssistantMessage(BaseModel):
     def to_dict(self)->dict:
         return self.__dict__
     
-class ImageMessage(BaseModel):
+class ImageFileMessage(BaseModel):
     base64_content_or_url: str = Field(default="",validation_alias=AliasChoices("base64_content_or_url"))
     image_format: str = Field(default="",validation_alias=AliasChoices("image_format"))
     image_resolution: str = Field(default=ImageResolution.AUTO,validation_alias=AliasChoices("image_resolution"))
@@ -79,11 +80,7 @@ class ImageMessage(BaseModel):
         if extension is None:
             return mime_types
         else:
-            mime_type=mime_types.get(extension,None)
-            if mime_type is None:
-                return None
-            else:
-                return mime_type
+            return mime_types.get(extension,None)
 
     @classmethod
     def get_supported_formats(cls)->list:        
@@ -96,21 +93,22 @@ class ImageMessage(BaseModel):
     def build_message_content(self)->dict|None:
         if self.image_format == ContentType.IMAGE_URL:
             url=self.base64_content_or_url
-        else:
+        elif self.image_format == ContentType.IMAGE_BASE64:
             mime_type=self.__get_mime_types(self.image_format)
             if mime_type is None:
                 raise ValueError(MessageExceptionErrors.UNSUPPORTED_IMAGE_FORMAT.format(self.image_format))
             url=f"data:image/{mime_type};base64,{self.base64_content_or_url}"
-        return {
-            "type": "image_url",
-            "image_url": {
-            "url" : url, 
-            "detail" : str(self.image_resolution)
+            return {
+                "type": "image_url",
+                "image_url": {
+                "url" : url, 
+                "detail" : str(self.image_resolution)
+                }
             }
-        }
+        else:
+            return None
 
-
-class PDFMessage(BaseModel):
+class PdfFileMessage(BaseModel):
     base64_content_or_url: str = Field(default="",validation_alias=AliasChoices("base64_content_or_url"))
     pdf_format: str = Field(default="",validation_alias=AliasChoices("pdf_format"))
     
@@ -128,11 +126,7 @@ class PDFMessage(BaseModel):
         if extension is None:
             return pdf_formats
         else:
-            mime_type=pdf_formats.get(extension,None)
-            if mime_type is None:
-                return None
-            else:
-                return mime_type
+            return pdf_formats.get(extension,None)
 
     @classmethod
     def get_supported_formats(cls)->list:        
@@ -171,9 +165,52 @@ class PDFMessage(BaseModel):
         if self.pdf_format == ContentType.PDF_URL:
             save_file_from_url(self.base64_content_or_url,output_temp_dir,pdf_filename)
             pdf_text=extract_text_from_pdf_file(pdf_tmp_to_work,advanced_image_recognition=advanced_image_recognition,ocr_engine_path=ocr_engine_path,output_temp_dir=output_temp_dir)
-        else:
+            os.remove(pdf_tmp_to_work)
+            return pdf_text
+        elif self.pdf_format == ContentType.PDF_BASE64:
             save_base64_to_file(self.base64_content_or_url,output_temp_dir,pdf_filename)
             pdf_text=extract_text_from_pdf_file(pdf_tmp_to_work,advanced_image_recognition=advanced_image_recognition,ocr_engine_path=ocr_engine_path,output_temp_dir=output_temp_dir)
-        os.remove(pdf_tmp_to_work)
-        return pdf_text
-   
+            os.remove(pdf_tmp_to_work)
+            return pdf_text
+        else:
+            raise ValueError(MessageExceptionErrors.UNSUPPORTED_PDF_FORMAT.format(self.pdf_format))
+
+class PlainTextFileMessage(BaseModel):
+    base64_content_or_url: str = Field(default="",validation_alias=AliasChoices("base64_content_or_url"))
+    file_format: str = Field(default="",validation_alias=AliasChoices("file_format"))
+    
+    @model_validator(mode="before")
+    def check_keys(cls, values):
+        return values
+
+    def to_dict(self)->dict:
+        return self.__dict__
+    
+    def __get_file_formats(self,extension:str=None)->str|dict|None:
+        file_formats={
+            "txt":"txt",
+            "csv":"csv",
+        }
+        if extension is None:
+            return file_formats
+        else:
+            return file_formats.get(extension,None)
+
+    @classmethod
+    def get_supported_formats(cls)->list:        
+        return [key for key, value in cls().__get_file_formats().items()]
+        
+    @classmethod
+    def get_default_types(cls)->list:        
+        return [ContentType.PLAIN_TEXT_URL,ContentType.PLAIN_TEXT_BASE64]
+
+    def build_message_content(self)->str|None:
+        if self.file_format == ContentType.PLAIN_TEXT_URL:
+            plain_text=load_text_from_url(self.base64_content_or_url)
+            return plain_text
+        elif self.file_format == ContentType.PLAIN_TEXT_BASE64:
+            plain_text=decode_base64_to_str(self.base64_content_or_url)
+            return plain_text
+        else:
+            raise ValueError(MessageExceptionErrors.UNSUPPORTED_FILE_FORMAT.format(self.file_format))
+

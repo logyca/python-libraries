@@ -211,3 +211,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.1] - 2024-08-16
 ### Added
 - The functions of extracting text from PDF files are refactored, using disk to optimize the use of ram memory and methods are added to extract text from images within the pages of the PDF files.
+
+## [0.1.2] - 2024-08-26
+### Added
+- New feature of attaching documents with txt, csv, docx, xlsx extension

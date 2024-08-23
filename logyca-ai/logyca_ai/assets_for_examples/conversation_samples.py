@@ -1,8 +1,8 @@
 from logyca_ai.utils.schemes.input.conversations import (
     AssistantMessage,
     Content,
-    ImageMessage,
-    PDFMessage,
+    ImageFileMessage,
+    PdfFileMessage,
     UserMessage,
 )
 from logyca_ai.utils.constants.content import ContentType
@@ -54,7 +54,7 @@ def get_content_image_sample(image_sample_base64:bool=False)->Content:
             UserMessage(
                 user="Extrae el texto que recibas en la imagen y devuelvelo en formato json.",
                 type=type_message,
-                additional_content=ImageMessage(
+                additional_content=ImageFileMessage(
                     base64_content_or_url=base64_content_or_url,
                     image_format=image_format,
                     image_resolution=image_resolution,
@@ -82,7 +82,7 @@ def get_content_pdf_sample(pdf_sample_base64:bool=False)->Content:
             UserMessage(
                 user="Dame los siguientes datos: Expediente, radicación, Fecha, Numero de registro, Vigencia.",
                 type=type_message,
-                additional_content=PDFMessage(
+                additional_content=PdfFileMessage(
                     base64_content_or_url=base64_content_or_url,
                     pdf_format=pdf_format,
                 ).to_dict()
