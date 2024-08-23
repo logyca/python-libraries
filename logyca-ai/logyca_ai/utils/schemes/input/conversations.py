@@ -92,21 +92,18 @@ class ImageFileMessage(BaseModel):
 
     def build_message_content(self)->dict|None:
         if self.image_format == ContentType.IMAGE_URL:
-            url=self.base64_content_or_url
-        elif self.image_format == ContentType.IMAGE_BASE64:
-            mime_type=self.__get_mime_types(self.image_format)
-            if mime_type is None:
-                raise ValueError(MessageExceptionErrors.UNSUPPORTED_IMAGE_FORMAT.format(self.image_format))
-            url=f"data:image/{mime_type};base64,{self.base64_content_or_url}"
-            return {
-                "type": "image_url",
-                "image_url": {
-                "url" : url, 
+            image_url=self.base64_content_or_url
+        else: 
+            mime_type = self.__get_mime_types(self.image_format)
+            if(mime_type is None): raise ValueError(MessageExceptionErrors.UNSUPPORTED_IMAGE_FORMAT.format(self.image_format))
+            image_url=f"data:image/{mime_type};base64,{self.base64_content_or_url}"
+        return {
+            "type": "image_url",
+            "image_url": {
+                "url" : image_url, 
                 "detail" : str(self.image_resolution)
-                }
             }
-        else:
-            return None
+        }
 
 class PdfFileMessage(BaseModel):
     base64_content_or_url: str = Field(default="",validation_alias=AliasChoices("base64_content_or_url"))
@@ -167,13 +164,12 @@ class PdfFileMessage(BaseModel):
             pdf_text=extract_text_from_pdf_file(pdf_tmp_to_work,advanced_image_recognition=advanced_image_recognition,ocr_engine_path=ocr_engine_path,output_temp_dir=output_temp_dir)
             os.remove(pdf_tmp_to_work)
             return pdf_text
-        elif self.pdf_format == ContentType.PDF_BASE64:
+        else:
+            if(self.__get_pdf_formats(self.pdf_format) is None): raise ValueError(MessageExceptionErrors.UNSUPPORTED_PDF_FORMAT.format(self.pdf_format))
             save_base64_to_file(self.base64_content_or_url,output_temp_dir,pdf_filename)
             pdf_text=extract_text_from_pdf_file(pdf_tmp_to_work,advanced_image_recognition=advanced_image_recognition,ocr_engine_path=ocr_engine_path,output_temp_dir=output_temp_dir)
             os.remove(pdf_tmp_to_work)
-            return pdf_text
-        else:
-            raise ValueError(MessageExceptionErrors.UNSUPPORTED_PDF_FORMAT.format(self.pdf_format))
+            return pdf_text            
 
 class PlainTextFileMessage(BaseModel):
     base64_content_or_url: str = Field(default="",validation_alias=AliasChoices("base64_content_or_url"))
@@ -208,9 +204,8 @@ class PlainTextFileMessage(BaseModel):
         if self.file_format == ContentType.PLAIN_TEXT_URL:
             plain_text=load_text_from_url(self.base64_content_or_url)
             return plain_text
-        elif self.file_format == ContentType.PLAIN_TEXT_BASE64:
+        else:
+            if(self.__get_file_formats(self.file_format) is None): raise ValueError(MessageExceptionErrors.UNSUPPORTED_FILE_FORMAT.format(self.file_format))
             plain_text=decode_base64_to_str(self.base64_content_or_url)
             return plain_text
-        else:
-            raise ValueError(MessageExceptionErrors.UNSUPPORTED_FILE_FORMAT.format(self.file_format))
 

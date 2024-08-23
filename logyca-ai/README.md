@@ -96,7 +96,7 @@ Script example. Through of code, you can:
   "messages": [
     {
       "additional_content": {
-        "base64_content_or_url": "https://raw.githubusercontent.com/logyca/python-libraries/3d91b5a93fb1219804753ce233fabd5f635662d3/logyca-ai/logyca_ai/assets_for_examples/file_or_documents/image.png",
+        "base64_content_or_url": "https://raw.githubusercontent.com/logyca/python-libraries/main/logyca-ai/logyca_ai/assets_for_examples/file_or_documents/image.png",
         "image_format": "image_url",
         "image_resolution": "auto"
       },
@@ -136,7 +136,7 @@ Script example. Through of code, you can:
   "messages": [
     {
       "additional_content": {
-        "base64_content_or_url": "https://raw.githubusercontent.com/logyca/python-libraries/3d91b5a93fb1219804753ce233fabd5f635662d3/logyca-ai/logyca_ai/assets_for_examples/file_or_documents/pdf.pdf",
+        "base64_content_or_url": "https://raw.githubusercontent.com/logyca/python-libraries/main/logyca-ai/logyca_ai/assets_for_examples/file_or_documents/pdf.pdf",
         "pdf_format": "pdf_url"
       },
       "type": "pdf_url",

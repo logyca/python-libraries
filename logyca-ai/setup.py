@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 COMPANY_NAME="LOGYCA"
 PACKAGE_NAME = "logyca-ai"
-VERSION = "0.2.0a1"
+VERSION = "0.2.0a6"
 
 install_requires = ["pydantic>=2.5","openai>=1.37.1","logyca>=0.1.17","PyMuPDF>=1.23.2","pillow>=9.3.0","pytesseract>=0.3.9"]
 

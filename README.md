@@ -80,8 +80,13 @@ For testing
 ```console
 # be located in the library folder
 cd folder/
+# then run this in the same folder where setup.py is located.    
+python -m build
 # Upload to PyPI Develop
+# It can be 12 hours late when refreshing changes
 twine upload dist/* --config-file ../.pypirc --verbose --repository testpypi
+# Install example
+# pip install -i https://test.pypi.org/simple/ logyca-ai==0.2.0
 ```
 
 # Build + Publish in https://dev.azure.com

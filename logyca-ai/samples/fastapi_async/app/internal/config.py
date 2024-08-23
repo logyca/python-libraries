@@ -25,5 +25,5 @@ settings = Settings()
 if len(settings.none_attributes)!=0:
     raise Exception(f"Missing required parameters: {settings.none_attributes}")
 
-settings_api_key=APIKeyScheme(key=settings.API_KEY, enable=True)
+settings_api_key=APIKeyScheme(key=settings.API_KEY, enable=False)
 get_api_key = APIKey(settings_api_key)

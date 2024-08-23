@@ -5,10 +5,12 @@ from logyca_ai import (
     Content,
     get_content_image_sample,
     get_content_pdf_sample,
+    get_content_plain_text_sample,
     get_content_simple_sample,
     ImageFileMessage,
     ImageResolution,
     PdfFileMessage,
+    PlainTextFileMessage,
     UserMessage,
 )
 from fastapi import Depends, APIRouter
@@ -39,7 +41,12 @@ router = APIRouter(prefix="/api/v1/chatgpt/conversation", tags={"Azure ChatGPT4o
             </li>
             <li>Definitions for pdf files
                 <ul>
-                    <li>PDF supported formats: {PdfFileMessage.get_supported_formats()}.
+                    <li>Supported formats: {PdfFileMessage.get_supported_formats()}.
+                </ul>
+            </li>
+            <li>Definitions for plain text files
+                <ul>
+                    <li>Supported formats: {PlainTextFileMessage.get_supported_formats()}.
                 </ul>
             </li>
             <li>assistant: These messages contain the responses that the language model generates based on the previous messages in the conversation.</li>
@@ -86,4 +93,12 @@ def image_example(image_sample_base64:bool=False,api_key: str = Depends(get_api_
     )
 def pdf_example(pdf_sample_base64:bool=False,api_key: str = Depends(get_api_key)):    
     return JSONResponse(content=jsonable_encoder(get_content_pdf_sample(pdf_sample_base64).to_dict()),status_code=status.HTTP_200_OK)
+
+@router.get("/plain_text_example/",
+    responses={200:{'model':Content}},
+    summary='Scheme example of conversation for endpoint',
+    status_code=status.HTTP_200_OK
+    )
+def plain_text_example(file_sample_base64:bool=False,api_key: str = Depends(get_api_key)):    
+    return JSONResponse(content=jsonable_encoder(get_content_plain_text_sample(file_sample_base64).to_dict()),status_code=status.HTTP_200_OK)
 
