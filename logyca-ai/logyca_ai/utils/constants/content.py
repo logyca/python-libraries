@@ -4,6 +4,8 @@ class ContentType(StrEnum):
    """Lowercase characters must be used"""
    IMAGE_BASE64      = "image_base64"
    IMAGE_URL         = "image_url"
+   MS_BASE64         = "ms_base64"
+   MS_URL            = "ms_url"
    PDF_BASE64        = "pdf_base64"
    PDF_URL           = "pdf_url"
    PLAIN_TEXT_BASE64 = "plain_text_base64"

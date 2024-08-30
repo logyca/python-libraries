@@ -1,16 +1,19 @@
 from logyca_ai.utils.constants.content import ContentType, ContentRole
 from logyca_ai.utils.constants.image import ImageResolution
+from logyca_ai.utils.constants.ocr import OCREngineSettings
 from logyca_ai.utils.helpers.content_loaders import save_base64_to_file, save_file_from_url, load_text_from_url, decode_base64_to_str
-from logyca_ai.utils.helpers.general_utils import get_random_name_datetime, delete_files_by_modification_hours
-from logyca_ai.utils.helpers.text_extraction import extract_text_from_pdf_file
+from logyca_ai.utils.helpers.general_utils import get_random_name_datetime, delete_files_by_modification_hours, get_file_name_extension_from_url
+from logyca_ai.utils.helpers.text_extraction_microsoft import extract_text_from_docx_file, extract_text_from_excel_file
+from logyca_ai.utils.helpers.text_extraction_pdf import extract_text_from_pdf_file
 from pydantic import BaseModel, AliasChoices, Field, model_validator
 from typing import Any
 import os
 
 class MessageExceptionErrors:
-    UNSUPPORTED_IMAGE_FORMAT="Unsupported image format: {}"
-    UNSUPPORTED_PDF_FORMAT="Unsupported pdf format: {}"
     UNSUPPORTED_FILE_FORMAT="Unsupported file format: {}"
+    UNSUPPORTED_IMAGE_FORMAT="Unsupported image format: {}"
+    UNSUPPORTED_MICROSOFT_FORMAT="Unsupported microsoft format: {}"
+    UNSUPPORTED_PDF_FORMAT="Unsupported pdf format: {}"
 
 class Content(BaseModel):
     system: str = Field(default="Personality, context, purpose.",validation_alias=AliasChoices(ContentRole.SYSTEM))
@@ -153,7 +156,7 @@ class PdfFileMessage(BaseModel):
         :return: Supported message list.
         :rtype: str
         """
-        if output_temp_dir is None: output_temp_dir=os.path.abspath(os.path.join(os.getcwd(),"tmp"))
+        if output_temp_dir is None: output_temp_dir=os.path.abspath(os.path.join(os.getcwd(),OCREngineSettings.TMP_DIR))
         if not os.path.exists(output_temp_dir):
             os.makedirs(output_temp_dir)
         delete_files_by_modification_hours(output_temp_dir,cleanup_output_temp_dir_after_hours)
@@ -209,3 +212,93 @@ class PlainTextFileMessage(BaseModel):
             plain_text=decode_base64_to_str(self.base64_content_or_url)
             return plain_text
 
+class MicrosoftFileMessage(BaseModel):
+    base64_content_or_url: str = Field(default="",validation_alias=AliasChoices("base64_content_or_url"))
+    file_format: str = Field(default="",validation_alias=AliasChoices("file_format"))
+    
+    @model_validator(mode="before")
+    def check_keys(cls, values):
+        return values
+
+    def to_dict(self)->dict:
+        return self.__dict__
+
+    def __get_word_extensions(self,extension:str=None)->str|dict|None:
+        file_formats = {
+            "doc":"doc",
+            "docx":"docx"
+        }
+        if extension is None:
+            return file_formats
+        else:
+            return file_formats.get(extension,None)
+    
+    def __get_excel_extensions(self,extension:str=None)->str|dict|None:
+        file_formats = {
+            "xls":"xls",
+            "xlsx":"xlsx",
+        }
+        if extension is None:
+            return file_formats
+        else:
+            return file_formats.get(extension,None)
+    
+    def __get_file_formats(self,extension:str=None)->str|dict|None:
+        file_formats = self.__get_word_extensions() | self.__get_excel_extensions()
+        if extension is None:
+            return file_formats
+        else:
+            return file_formats.get(extension,None)
+
+    @classmethod
+    def get_supported_formats(cls)->list:        
+        return [key for key, value in cls().__get_file_formats().items()]
+        
+    @classmethod
+    def get_default_types(cls)->list:        
+        return [ContentType.MS_URL,ContentType.MS_BASE64]
+
+    def build_message_content(self,advanced_image_recognition:bool=False,ocr_engine_path:str=None,output_temp_dir:str=None,cleanup_output_temp_dir_after_hours: int = 24)->str|None:
+        """
+        Build the supported message list.
+
+        :param content: Content to send to chatgpt, which consists of system and messages.
+        :type content: str
+        :param advanced_image_recognition: (pdf for now) Indicates whether to perform text recognition on images within the files or documents.
+                                If True, OCR techniques will be used to extract text from images.
+        :type advanced_image_recognition: bool
+        :param ocr_engine_path: Path to the OCR executable. If provided, this path will be used instead of the default.
+        :type ocr_engine_path: str, optional
+        :param output_temp_dir: Temporary directory for storing output files.
+                                If not provided, a default tmp temporary directory in the application root folder will be used.
+        :type output_temp_dir: str, optional
+        :param cleanup_output_temp_dir_after_hours: Number of hours after which the files in the temporary directory will be deleted on the next call of the function.
+        :type cleanup_output_temp_dir_after_hours: int, optional
+
+        :return: Supported message list.
+        :rtype: str
+        """
+        if output_temp_dir is None: output_temp_dir=os.path.abspath(os.path.join(os.getcwd(),OCREngineSettings.TMP_DIR))
+        if not os.path.exists(output_temp_dir):
+            os.makedirs(output_temp_dir)
+        delete_files_by_modification_hours(output_temp_dir,cleanup_output_temp_dir_after_hours)
+        if self.file_format == ContentType.MS_URL:
+            file_name, file_extension=get_file_name_extension_from_url(self.base64_content_or_url)
+            if(self.__get_file_formats(file_extension) is None): raise ValueError(MessageExceptionErrors.UNSUPPORTED_MICROSOFT_FORMAT.format(self.file_format))
+            ms_filename = f"{get_random_name_datetime()}.{file_extension}"
+            ms_tmp_to_work = os.path.abspath(os.path.join(output_temp_dir,ms_filename))
+            save_file_from_url(self.base64_content_or_url,output_temp_dir,ms_filename)
+        else:
+            ms_filename = f"{get_random_name_datetime()}.{self.file_format}"
+            ms_tmp_to_work = os.path.abspath(os.path.join(output_temp_dir,ms_filename))
+            if(self.__get_file_formats(self.file_format) is None): raise ValueError(MessageExceptionErrors.UNSUPPORTED_MICROSOFT_FORMAT.format(self.file_format))
+            save_base64_to_file(self.base64_content_or_url,output_temp_dir,ms_filename)
+            file_extension = self.file_format
+        if self.__get_word_extensions(file_extension) is not None:
+            file_text=extract_text_from_docx_file(ms_tmp_to_work,advanced_image_recognition=advanced_image_recognition,ocr_engine_path=ocr_engine_path,output_temp_dir=output_temp_dir)
+        elif self.__get_excel_extensions(file_extension) is not None:
+            file_text=extract_text_from_excel_file(ms_tmp_to_work,advanced_image_recognition=advanced_image_recognition,ocr_engine_path=ocr_engine_path,output_temp_dir=output_temp_dir)
+        else:
+            file_text=""
+        os.remove(ms_tmp_to_work)
+        return file_text

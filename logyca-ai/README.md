@@ -41,6 +41,7 @@ FastAPI example. Through Swagger, you can:
 - Use the example endpoints to obtain the input schemas for the post method and interact with the available parameters.
 - Endpoint publishing is asynchronous of openai SDK.
 - The model used is ChatGPT-4o for testing.
+- Currently the formats supported to receive files and extract the text to interact with artificial intelligence are: txt, csv, pdf, images, Microsoft (docx, xlsx).
 
 Script example. Through of code, you can:
 - https://github.com/logyca/python-libraries/tree/main/logyca-ai/samples/script_app_sync

@@ -2,12 +2,15 @@ from logyca_ai.utils.schemes.input.conversations import (
     AssistantMessage,
     Content,
     ImageFileMessage,
+    MicrosoftFileMessage,
     PdfFileMessage,
     PlainTextFileMessage,
     UserMessage,
 )
 from logyca_ai.assets_for_examples.file_or_documents.image_base64 import image_base64_sample
 from logyca_ai.assets_for_examples.file_or_documents.pdf_base64 import pdf_base64_sample
+from logyca_ai.assets_for_examples.file_or_documents.ms_word_base64 import ms_word_base64_sample
+from logyca_ai.assets_for_examples.file_or_documents.ms_excel_base64 import ms_excel_base64_sample
 from logyca_ai.utils.constants.content import ContentType
 from logyca_ai.utils.constants.image import ImageResolution
 from logyca_ai.utils.helpers.content_loaders import load_text_from_url
@@ -141,7 +144,39 @@ def get_content_plain_text_sample(file_sample_base64:bool=False)->Content:
         ]
     )
 
-
-
-
-
+def get_content_microsoft_sample(file_sample_base64:bool=False,extension_for_example:str="docx")->Content:
+    if file_sample_base64:
+        if extension_for_example == "docx":
+            base64_content_or_url=ms_word_base64_sample
+        elif extension_for_example == "xlsx":
+            base64_content_or_url=ms_excel_base64_sample
+        else:
+            base64_content_or_url="No example available at this time."
+        file_format=extension_for_example
+        type_message=ContentType.MS_BASE64
+    else:
+        if extension_for_example == "docx":
+            base64_content_or_url="https://raw.githubusercontent.com/logyca/python-libraries/main/logyca-ai/logyca_ai/assets_for_examples/file_or_documents/ms_word.docx"
+        elif extension_for_example == "xlsx":
+            base64_content_or_url="https://raw.githubusercontent.com/logyca/python-libraries/main/logyca-ai/logyca_ai/assets_for_examples/file_or_documents/ms_excel.xlsx"
+        else:
+            base64_content_or_url="No example available at this time."
+        file_format=ContentType.MS_URL
+        type_message=ContentType.MS_URL
+    return Content(
+        system="""
+                No uses lenguaje natural para la respuesta.
+                Dame la información que puedas extraer de la imagen en formato JSON.
+                Solo devuelve la información, no formatees con caracteres adicionales la respuesta.
+                """.strip(),
+        messages=[
+            UserMessage(
+                user="Dame los siguientes datos: Expediente, radicación, Fecha, Numero de registro, Vigencia.",
+                type=type_message,
+                additional_content=MicrosoftFileMessage(
+                    base64_content_or_url=base64_content_or_url,
+                    file_format=file_format,
+                ).to_dict()
+            )
+        ]
+    )

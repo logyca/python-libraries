@@ -4,16 +4,18 @@ from logyca_ai import (
     AzureOpenAIChatGPT,
     Content,
     get_content_image_sample,
+    get_content_microsoft_sample,
     get_content_pdf_sample,
     get_content_plain_text_sample,
     get_content_simple_sample,
     ImageFileMessage,
     ImageResolution,
+    MicrosoftFileMessage,
     PdfFileMessage,
     PlainTextFileMessage,
     UserMessage,
 )
-from fastapi import Depends, APIRouter
+from fastapi import Depends, APIRouter, Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from logyca import APIResultDTO, LogycaStatusEnum
@@ -47,6 +49,11 @@ router = APIRouter(prefix="/api/v1/chatgpt/conversation", tags={"Azure ChatGPT4o
             <li>Definitions for plain text files
                 <ul>
                     <li>Supported formats: {PlainTextFileMessage.get_supported_formats()}.
+                </ul>
+            </li>
+            <li>Definitions for Microsoft files
+                <ul>
+                    <li>Supported formats: {MicrosoftFileMessage.get_supported_formats()}.
                 </ul>
             </li>
             <li>assistant: These messages contain the responses that the language model generates based on the previous messages in the conversation.</li>
@@ -101,4 +108,15 @@ def pdf_example(pdf_sample_base64:bool=False,api_key: str = Depends(get_api_key)
     )
 def plain_text_example(file_sample_base64:bool=False,api_key: str = Depends(get_api_key)):    
     return JSONResponse(content=jsonable_encoder(get_content_plain_text_sample(file_sample_base64).to_dict()),status_code=status.HTTP_200_OK)
+
+@router.get("/microsoft_file_example/",
+    responses={200:{'model':Content}},
+    summary='Scheme example of conversation for endpoint',
+    status_code=status.HTTP_200_OK
+    )
+def microsoft_file_example(
+    file_sample_base64:bool=False,
+    extension: str = Query(..., description="Select one file supported extension", enum=list(MicrosoftFileMessage.get_supported_formats())),
+    api_key: str = Depends(get_api_key)):
+    return JSONResponse(content=jsonable_encoder(get_content_microsoft_sample(file_sample_base64,extension).to_dict()),status_code=status.HTTP_200_OK)
 

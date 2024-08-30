@@ -1,5 +1,5 @@
 from logyca_ai.utils.constants.content import ContentRole
-from logyca_ai.utils.schemes.input.conversations import Content, ImageFileMessage, PdfFileMessage, PlainTextFileMessage
+from logyca_ai.utils.schemes.input.conversations import Content, ImageFileMessage, PdfFileMessage, PlainTextFileMessage, MicrosoftFileMessage
 from logyca_ai.utils.schemes.output.conversations import ConversationAnswer, ConversationUsage
 from openai import AsyncAzureOpenAI, AzureOpenAI
 from openai.types.completion_usage import CompletionUsage
@@ -71,7 +71,7 @@ class AzureOpenAIChatGPT():
             else:
                 user_message = message.get(ContentRole.USER,None)
                 if user_message is None:
-                    raise ValueError(f"Unsopported role {user_message}")
+                    raise ValueError(f"Unsupported role {user_message}")
                 else:
                     type_message = message.get("type",None)                
 
@@ -91,6 +91,12 @@ class AzureOpenAIChatGPT():
                         additional_content = message.get("additional_content",None)
                         messages.append({"role":str(ContentRole.USER),"content":
                             PlainTextFileMessage(**additional_content).build_message_content()
+                        })                        
+
+                    if type_message in MicrosoftFileMessage.get_default_types():
+                        additional_content = message.get("additional_content",None)
+                        messages.append({"role":str(ContentRole.USER),"content":
+                            MicrosoftFileMessage(**additional_content).build_message_content(advanced_image_recognition=advanced_image_recognition,ocr_engine_path=ocr_engine_path,output_temp_dir=output_temp_dir,cleanup_output_temp_dir_after_hours=cleanup_output_temp_dir_after_hours)
                         })                        
 
                     if user_message is not None and user_message!="":

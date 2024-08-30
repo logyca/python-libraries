@@ -1,21 +1,8 @@
-from enum import StrEnum
+from logyca_ai.utils.constants.ocr import OCREngine, OCREngineSettings
 from PIL import Image # Pillow
 import fitz  # PyMuPDF
 import os
 import pytesseract
-
-class OCREngine(StrEnum):
-    WINDOWS_PATH_01     = "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
-    WINDOWS_PATH_02     = "C:\\Program Files (x86)\\Tesseract-OCR\\tesseract.exe"
-    LINUX_PATH_01       = "/usr/bin/tesseract"
-    LINUX_PATH_02       = "/usr/local/bin/tesseract"
-    
-    @classmethod
-    def get_binary_path(cls):
-        for location in cls:
-            if os.path.exists(location):
-                return str(location)
-        return None
 
 def extract_text_from_pdf_file(filename_full_path:str,advanced_image_recognition:bool=False,ocr_engine_path:str=None,output_temp_dir:str=None):
     """
@@ -57,7 +44,7 @@ def extract_text_from_pdf_file(filename_full_path:str,advanced_image_recognition
 
     text = ""
     if output_temp_dir is None:
-        output_temp_dir=os.path.abspath(os.path.join(os.path.dirname(__file__),"tmp"))
+        output_temp_dir=os.path.abspath(os.path.join(os.path.dirname(__file__),OCREngineSettings.TMP_DIR))
     if not os.path.exists(output_temp_dir):
         os.makedirs(output_temp_dir)
 

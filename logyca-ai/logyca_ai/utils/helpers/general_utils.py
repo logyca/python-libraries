@@ -1,7 +1,7 @@
-from datetime import datetime
-import random
+from datetime import datetime, timedelta
+from urllib.parse import urlparse
 import os
-from datetime import timedelta
+import random
 
 def get_random_name_datetime():
     date_now = datetime.now()
@@ -18,3 +18,15 @@ def delete_files_by_modification_hours(folder,hours_limit:int=8):
             modification_datetime = datetime.fromtimestamp(modification_time)
             if modification_datetime < time_limit:
                 os.remove(file_path)
+
+def get_file_name_extension_from_url(url: str) -> tuple[str,str]|None:
+    """
+    :return: file_name, file_extension or None,None if error.
+    """
+    try:
+        parsed_url = urlparse(url)
+        file_name = os.path.basename(parsed_url.path)
+        _, file_extension = os.path.splitext(file_name)
+        return file_name, file_extension.split(".")[1]
+    except:
+        return None,None
