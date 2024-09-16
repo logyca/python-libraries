@@ -8,9 +8,10 @@ from logyca_ai.utils.schemes.input.conversations import (
     UserMessage,
 )
 from logyca_ai.assets_for_examples.file_or_documents.image_base64 import image_base64_sample
-from logyca_ai.assets_for_examples.file_or_documents.pdf_base64 import pdf_base64_sample
-from logyca_ai.assets_for_examples.file_or_documents.ms_word_base64 import ms_word_base64_sample
 from logyca_ai.assets_for_examples.file_or_documents.ms_excel_base64 import ms_excel_base64_sample
+from logyca_ai.assets_for_examples.file_or_documents.ms_word_base64 import ms_word_base64_sample
+from logyca_ai.assets_for_examples.file_or_documents.pdf_base64 import pdf_base64_sample
+from logyca_ai.assets_for_examples.file_or_documents.plain_text_base64 import plain_text_base64
 from logyca_ai.utils.constants.content import ContentType
 from logyca_ai.utils.constants.image import ImageResolution
 from logyca_ai.utils.helpers.content_loaders import load_text_from_url
@@ -111,14 +112,12 @@ def get_content_pdf_sample(pdf_sample_base64:bool=False)->Content:
     )
 
 def get_content_plain_text_sample(file_sample_base64:bool=False)->Content:
-    url = "https://raw.githubusercontent.com/logyca/python-libraries/main/logyca-ai/logyca_ai/assets_for_examples/file_or_documents/plain_text.csv"
     if file_sample_base64:
-        data=load_text_from_url(url)
-        base64_content_or_url=encode_str_base64(data)
+        base64_content_or_url=plain_text_base64
         file_format="csv"
         type_message=ContentType.PLAIN_TEXT_BASE64
     else:
-        base64_content_or_url=url
+        base64_content_or_url="https://raw.githubusercontent.com/logyca/python-libraries/main/logyca-ai/logyca_ai/assets_for_examples/file_or_documents/plain_text.csv"
         file_format=ContentType.PLAIN_TEXT_URL
         type_message=ContentType.PLAIN_TEXT_URL
     return Content(

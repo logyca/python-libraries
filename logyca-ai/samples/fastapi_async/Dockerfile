@@ -1,9 +1,4 @@
-# Multistage Dockerfile
-# Base Image: Debian 11 (Bullseye) with Python 3.11.2 slim variant
-# Initial Image Size: python:3.11.2-slim-bullseye - 122MB
-# Final Image Size: 433MB
-
-FROM python:3.11.2-slim-bullseye
+FROM python:3.11.10-slim-bookworm
 
 # Set Environment Variables
 # Python Configuration

@@ -8,11 +8,13 @@ load_dotenv(dotenv_path=env_path)
 
 class Settings:
     def __init__(self) -> None:
+        self.API_KEY: str = os.getenv("API_KEY")
+        self.AZURE_OPENAI_DEPLOYMENT: str = os.getenv("AZURE_OPENAI_DEPLOYMENT")
         self.AZURE_OPENAI_ENDPOINT: str = os.getenv("AZURE_OPENAI_ENDPOINT")
+        self.AZURE_OPENAI_MODEL_NAME: str = os.getenv("AZURE_OPENAI_MODEL_NAME")
+        self.AZURE_OPENAI_MODEL_VERSION: str = os.getenv("AZURE_OPENAI_MODEL_VERSION")
         self.OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY")
         self.OPENAI_API_VERSION: str = os.getenv("OPENAI_API_VERSION")
-        self.AZURE_OPENAI_DEPLOYMENT: str = os.getenv("AZURE_OPENAI_DEPLOYMENT")
-        self.API_KEY: str = os.getenv("API_KEY")
 
         self.mandatory_attribute_validation()
 

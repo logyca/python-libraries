@@ -1,9 +1,12 @@
 from docx import Document # python-docx
 from io import BytesIO
 from logyca_ai.utils.constants.ocr import OCREngine, OCREngineSettings
+from logyca_ai.utils.helpers.garbage_collector_helper import garbage_collector_at_the_end
 from openpyxl import load_workbook
 from PIL import Image  # Pillow
+import json
 import os
+import pandas as pd
 import pytesseract
 
 def extract_text_from_docx_file(filename_full_path:str,advanced_image_recognition:bool=False,ocr_engine_path:str=None,output_temp_dir:str=None):
@@ -58,7 +61,8 @@ def extract_text_from_docx_file(filename_full_path:str,advanced_image_recognitio
 
     return text
 
-def extract_text_from_excel_file(filename_full_path: str, advanced_image_recognition: bool = False, ocr_engine_path: str = None, output_temp_dir: str = None):
+@garbage_collector_at_the_end
+def extract_text_from_excel_file(filename_full_path: str, advanced_image_recognition: bool = False, ocr_engine_path: str = None, output_temp_dir: str = None,format_output:str="json"):
     """
     Extracts text from an Excel file including all sheets and any embedded images.
 
@@ -66,8 +70,20 @@ def extract_text_from_excel_file(filename_full_path: str, advanced_image_recogni
     :param advanced_image_recognition: Indicates whether to perform OCR on images within the Excel file.
     :param ocr_engine_path: Path to the OCR executable.
     :param output_temp_dir: Temporary directory for storing output files.
-    :return: Extracted text from the Excel file.
-    :rtype: str
+    :param format_output: Data array format for output, can be csv, json, list. The default is json.
+    :return: A text in JSON format representing the structure of a Microsoft Excel spreadsheet and has the following format.
+                Sheet_name: It is the name of the primary key that represents an object, within this object, there are several subkeys.
+                Sheet_name: It is the name of the primary key.
+                content: Contains a list of lists (a two-dimensional array) that represents the content of the spreadsheet cells.
+                image_text: Contains the text extracted from images within the Microsoft Excel document.
+                Example of the content in the list of formats that I will send you.
+                {
+                    "sheet_name": {
+                        "content": [["", "", "", ""],["", "", "", ""]],
+                        "image_text": ""
+                        },
+                }
+    :rtype: dict
     """
     # Set OCR engine path
     if advanced_image_recognition:
@@ -81,24 +97,55 @@ def extract_text_from_excel_file(filename_full_path: str, advanced_image_recogni
     if not os.path.exists(output_temp_dir):
         os.makedirs(output_temp_dir)
 
-    text = ""
+    ################################################
+    # Read text data
+    excel_data = pd.ExcelFile(filename_full_path)
+    result = {}
+    # print(f"memory get_memory_consumed_by_current_process:{get_memory_consumed_by_current_process()}")
+    sheet_names = excel_data.sheet_names
+    for sheet in sheet_names:
+        df = pd.read_excel(filename_full_path, sheet_name=sheet, header=None)
+        df = df.fillna("")
+        df = df.dropna(how='all')
+
+        if format_output.lower() == 'list':
+            list_of_lists = df.values.tolist()
+        elif format_output.lower() == 'csv':
+            list_of_lists = df.to_csv(index=False, sep=";", lineterminator='\n')
+        elif format_output.lower() == 'json':
+            list_of_lists = df.to_json(orient='records')
+        else:
+            raise ValueError(f"Unsupported format format_output: {format_output}")
+
+        # print(list_of_lists)
+        # print(df)
+        result[sheet] = {
+            "content": list_of_lists
+        }
+        del df
+        del list_of_lists
+    excel_data.close()
+    del excel_data
+
+    ################################################
+    # OCR - Extract data from images
 
     workbook = load_workbook(filename_full_path, data_only=True)
     for sheet_name in workbook.sheetnames:
         sheet = workbook[sheet_name]
-        text += f"Sheet: {sheet_name}\n"
-        
-        for row in sheet.iter_rows(values_only=True):
-            for cell in row:
-                if cell:
-                    text += str(cell) + " "
-
+        text = ""
         if advanced_image_recognition:
             for image in sheet._images:
                 img = Image.open(BytesIO(image._data()))
                 ocr_text = pytesseract.image_to_string(img)
                 text += ocr_text
 
-        text += "\n"
+                text += "\n"
+            if text != "":
+                result[sheet_name]["image_text"] = text
+        del sheet
+    del workbook
 
-    return text
+    json_result = json.dumps(result,default=str)
+    # print(json_result)
+    return json_result

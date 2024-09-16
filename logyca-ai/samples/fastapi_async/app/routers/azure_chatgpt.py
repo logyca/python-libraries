@@ -1,5 +1,5 @@
-from app.internal.config import settings,get_api_key
-
+from app.internal.config import settings, get_api_key
+from app.schemes.output.model_capabilities_check import ModelCapabilitiesCheck
 from logyca_ai import (
     AzureOpenAIChatGPT,
     Content,
@@ -13,6 +13,7 @@ from logyca_ai import (
     MicrosoftFileMessage,
     PdfFileMessage,
     PlainTextFileMessage,
+    TokeniserHelper,
     UserMessage,
 )
 from fastapi import Depends, APIRouter, Query
@@ -27,8 +28,13 @@ router = APIRouter(prefix="/api/v1/chatgpt/conversation", tags={"Azure ChatGPT4o
     responses={200:{'model':APIResultDTO}},
     summary='To use this endpoint, be guided by the results of the example endpoints.',
     description=f'''
-        Conversations:
         <ul>
+            <h2>Parameters</h2>
+            <li>advanced_image_recognition: Used to extract text from images contained within documents using an OCR library. It does not apply to some files such as plain_text. Note: This extraction may consume additional ram memory.</li>
+            <li>just_count_tokens: Count the tokens of the messages that will be sent to ChatGPT and return if they meet the capacity of the current model and version.</li>
+        </ul>
+        <ul>
+            <h2>Conversations</h2>            
             <li>system: Personality, context, purpose.</li>
             <li>user: type={UserMessage.get_supported_types()}.
                 <ul>
@@ -61,21 +67,35 @@ router = APIRouter(prefix="/api/v1/chatgpt/conversation", tags={"Azure ChatGPT4o
     ''',
     status_code=status.HTTP_200_OK
     )
-async def conversation(content:Content, api_key: str = Depends(get_api_key)):
+async def conversation(content:Content, advanced_image_recognition:bool=False,just_count_tokens:bool=False, api_key: str = Depends(get_api_key)):
     chat=AzureOpenAIChatGPT(azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,api_key=settings.OPENAI_API_KEY,api_version=settings.OPENAI_API_VERSION)
-    messages = chat.build_conversation_message_list(content=content,advanced_image_recognition=False)
-    http_status,respond=await chat.conversation_async(model=settings.AZURE_OPENAI_DEPLOYMENT,messages=messages)
+    messages = chat.build_conversation_message_list(content=content,advanced_image_recognition=advanced_image_recognition)
     aPIResultDTO=APIResultDTO()
-    if http_status == status.HTTP_200_OK:
-        aPIResultDTO.resultObject=respond.to_dict()
-        return JSONResponse(content=jsonable_encoder(aPIResultDTO.to_dict()),status_code=http_status)
+    if just_count_tokens is False:
+        http_status,respond=await chat.conversation_async(model=settings.AZURE_OPENAI_DEPLOYMENT,messages=messages)
+        if http_status == status.HTTP_200_OK:
+            aPIResultDTO.resultObject=respond.to_dict()
+            return JSONResponse(content=jsonable_encoder(aPIResultDTO.to_dict()),status_code=http_status)
+        else:
+            aPIResultDTO.dataError=True
+            aPIResultDTO.resultMessage=respond
+            aPIResultDTO.apiException.message=respond
+            aPIResultDTO.apiException.status=http_status
+            aPIResultDTO.apiException.logycaStatus=LogycaStatusEnum.from_http_status_code(http_status)
+            return JSONResponse(content=jsonable_encoder(aPIResultDTO.to_dict()),status_code=http_status)
     else:
-        aPIResultDTO.dataError=True
-        aPIResultDTO.resultMessage=respond
-        aPIResultDTO.apiException.message=respond
-        aPIResultDTO.apiException.status=http_status
-        aPIResultDTO.apiException.logycaStatus=LogycaStatusEnum.from_http_status_code(http_status)
-        return JSONResponse(content=jsonable_encoder(aPIResultDTO.to_dict()),status_code=http_status)
+        messages_json = {}
+        count=0
+        for message in messages:
+            messages_json[f"m_{count}"]=message
+            count = count + 1
+        model_capabilities_check = ModelCapabilitiesCheck(
+            model = settings.AZURE_OPENAI_MODEL_NAME,
+            version = settings.AZURE_OPENAI_MODEL_VERSION,
+            model_capabilities = TokeniserHelper.calculate_tokens_with_model_capabilities(messages_json,settings.AZURE_OPENAI_MODEL_NAME,settings.AZURE_OPENAI_MODEL_VERSION)
+        )
+        aPIResultDTO.resultObject=model_capabilities_check
+        return JSONResponse(content=jsonable_encoder(aPIResultDTO.to_dict()),status_code=status.HTTP_200_OK)
 
 @router.get("/simple_example/",
     responses={200:{'model':Content}},

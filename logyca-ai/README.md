@@ -40,7 +40,7 @@ FastAPI example. Through Swagger, you can:
 - https://github.com/logyca/python-libraries/tree/main/logyca-ai/samples/fastapi_async
 - Use the example endpoints to obtain the input schemas for the post method and interact with the available parameters.
 - Endpoint publishing is asynchronous of openai SDK.
-- The model used is ChatGPT-4o for testing.
+- The model currently used is ChatGPT-4o, no other models have been tested so far.
 - Currently the formats supported to receive files and extract the text to interact with artificial intelligence are: txt, csv, pdf, images, Microsoft (docx, xlsx).
 
 Script example. Through of code, you can:
@@ -49,6 +49,52 @@ Script example. Through of code, you can:
 - The examples use synchronous functionality of openai SDK.
 - The model used is ChatGPT-4o for testing.
 
+## Environment variables documentation for example: fastapi_async
+
+The examples are built in the Microsoft Azure OpenAI environment, and the variables to use are the following:
+
+.env.sample
+```console
+# Environment variables documentation:
+
+# API_KEY:
+# The general API key used for authentication with services. This key is typically used for accessing cloud-based or other API-driven platforms. Replace '***' with the actual key.
+
+# AZURE_OPENAI_DEPLOYMENT:
+# The name or identifier of the OpenAI deployment within Azure. This defines the specific model version and configuration you are using in Azure OpenAI Service. Set this to the name of the deployed model, such as 'chatgpt3.5-turbo-1106'.
+
+# AZURE_OPENAI_ENDPOINT:
+# The base URL of the Azure OpenAI Service endpoint. This is the URL where API requests are sent, typically formatted like 'https://<your-endpoint>.openai.azure.com/'.
+
+# AZURE_OPENAI_MODEL_NAME:
+# The name of the specific OpenAI model being used in Azure, for example, 'gpt-35-turbo'. This identifies which model variant will be used for processing requests.
+
+# AZURE_OPENAI_MODEL_VERSION:
+# The version of the OpenAI model deployed in Azure. This typically reflects updates or optimizations to the model, such as '1106' to indicate a version from November 6th.
+
+# OPENAI_API_KEY:
+# The API key provided by OpenAI directly (not through Azure). This is used to authenticate and access OpenAI services outside of Azure.
+
+# OPENAI_API_VERSION:
+# The version of the OpenAI API being used. This specifies the version of the API and its capabilities, for example, '2023-03-15-preview'. It dictates the available features and request format.
+
+API_KEY=***
+AZURE_OPENAI_DEPLOYMENT=***
+AZURE_OPENAI_ENDPOINT=***
+AZURE_OPENAI_MODEL_NAME=***
+AZURE_OPENAI_MODEL_VERSION=***
+OPENAI_API_KEY=***
+OPENAI_API_VERSION=***
+
+# Example
+# API_KEY=CUSTOM_ABC
+# AZURE_OPENAI_DEPLOYMENT=chat4omni
+# AZURE_OPENAI_ENDPOINT=azurenameforendpoint
+# AZURE_OPENAI_MODEL_NAME=gpt-4o
+# AZURE_OPENAI_MODEL_VERSION=2024-05-13
+# OPENAI_API_KEY=AZURE_ABC
+# OPENAI_API_VERSION=2024-07-01-preview
+```
 ---
 
 # OCR engine to extract images.
@@ -164,6 +210,78 @@ Script example. Through of code, you can:
 }
 ```
 
+# Example for plain_text conversation.
+
+## Using public published URL for plain_text
+```json
+{
+  "system": "No uses lenguaje natural para la respuesta.\n                Dame la información que puedas extraer en formato JSON.\n                Solo devuelve la información, no formatees con caracteres adicionales la respuesta.\n                Te voy a enviar un texto que representa información en formato csv.",
+  "messages": [
+    {
+      "additional_content": {
+        "base64_content_or_url": "https://raw.githubusercontent.com/logyca/python-libraries/main/logyca-ai/logyca_ai/assets_for_examples/file_or_documents/plain_text.csv",
+        "file_format": "plain_text_url"
+      },
+      "type": "plain_text_url",
+      "user": "Dame los siguientes datos de la primera fila del documento: Expediente, radicación, Fecha, Numero de registro, Vigencia.\n                A partir de la fila 2 del documento, suma los valores de la columna Valores_A.\n                A partir de la fila 2 del documento, Suma los valores de la columna Valores_B."
+    }
+  ]
+}
+```
+
+## Using plain_text content in base64
+```json
+{
+  "system": "No uses lenguaje natural para la respuesta.\n                Dame la información que puedas extraer en formato JSON.\n                Solo devuelve la información, no formatees con caracteres adicionales la respuesta.\n                Te voy a enviar un texto que representa información en formato csv.",
+  "messages": [
+    {
+      "additional_content": {
+        "base64_content_or_url": "<base64 pdf content>",
+        "file_format": "csv"
+      },
+      "type": "plain_text_base64",
+      "user": "Dame los siguientes datos de la primera fila del documento: Expediente, radicación, Fecha, Numero de registro, Vigencia.\n                A partir de la fila 2 del documento, suma los valores de la columna Valores_A.\n                A partir de la fila 2 del documento, Suma los valores de la columna Valores_B."
+    }
+  ]
+}
+```
+
+# Example for Microsoft files conversation (Word, Excel).
+
+## Using public published URL for Excel file
+```json
+{
+  "system": "No uses lenguaje natural para la respuesta.\n                Dame la información que puedas extraer de la imagen en formato JSON.\n                Solo devuelve la información, no formatees con caracteres adicionales la respuesta.",
+  "messages": [
+    {
+      "additional_content": {
+        "base64_content_or_url": "https://raw.githubusercontent.com/logyca/python-libraries/main/logyca-ai/logyca_ai/assets_for_examples/file_or_documents/ms_excel.xlsx",
+        "file_format": "ms_url"
+      },
+      "type": "ms_url",
+      "user": "Dame los siguientes datos: Expediente, radicación, Fecha, Numero de registro, Vigencia."
+    }
+  ]
+}
+```
+
+## Using Excel file content in base64
+```json
+{
+    "system": "No uses lenguaje natural para la respuesta.\n                Dame la información que puedas extraer de la imagen en formato JSON.\n                Solo devuelve la información, no formatees con caracteres adicionales la respuesta.",
+    "messages": [
+      {
+        "additional_content": {
+          "base64_content_or_url": "<base64 pdf content>",
+          "file_format": "xlsx"
+        },
+        "type": "ms_base64",
+        "user": "Dame los siguientes datos: Expediente, radicación, Fecha, Numero de registro, Vigencia."
+      }
+    ]
+}
+```
+
 
 ---
 
@@ -213,6 +331,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - The functions of extracting text from PDF files are refactored, using disk to optimize the use of ram memory and methods are added to extract text from images within the pages of the PDF files.
 
-## [0.1.2] - 2024-08-26
+## [0.2.0] - 2024-08-30
 ### Added
 - New feature of attaching documents with txt, csv, docx, xlsx extension
+
+## [0.2.1] - 2024-09-16
+### Added
+- New tiktoken function to count tokens and check model capacity, returning if it meets the maximum_request_tokens requirements for both input and output.
+### Fixed
+- Extract excel files to output formats json, csv and list.
