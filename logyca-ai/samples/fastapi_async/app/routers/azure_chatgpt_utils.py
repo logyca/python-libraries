@@ -13,9 +13,22 @@ from typing import Union
 
 router = APIRouter(prefix="/api/v1/chatgpt/utils", tags={"Azure ChatGPT Utils"})
 
+@router.get("/get_model_capabilities/",
+    responses={200:{'model':Content}},
+    summary='Get the current supported capabilities of the models',
+    description=f'''
+    ''',
+    status_code=status.HTTP_200_OK
+    )
+def get_model_capabilities(api_key: str = Depends(get_api_key)):
+    aPIResultDTO=APIResultDTO()
+    aPIResultDTO.resultObject=TokeniserHelper.get_model_capabilities()
+    return JSONResponse(content=jsonable_encoder(aPIResultDTO.to_dict()),status_code=status.HTTP_200_OK)
+
+
 @router.post("/get_tokens_with_model_capabilities/",
     responses={200:{'model':Content}},
-    summary='Scheme example of conversation for endpoint',
+    summary='Get tokens with model capabilities',
     description=f'''
         <ul>
             <h2>Parameters</h2>
