@@ -340,3 +340,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New tiktoken function to count tokens and check model capacity, returning if it meets the maximum_request_tokens requirements for both input and output.
 ### Fixed
 - Extract excel files to output formats json, csv and list.
+
+## [0.2.2] - 2024-10-22
+### Added
+- New functionalities are added to extract images from documents in base64 lists: extract_images_from_pdf_file, extract_images_from_docx_file
+- The Swagger documentation is improved in the FastAPI example, adding the parameter: just_extract_images to the POST method to use the new document image extraction features.
+

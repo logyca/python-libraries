@@ -20,3 +20,10 @@ class ConversationAnswer(BaseModel):
         tmp = self.__dict__.copy()
         tmp["usage_data"] = tmp["usage_data"].to_dict()
         return tmp
+
+class ImageBase64(BaseModel):
+    image_base64:str = Field(default="")
+    image_format:str = Field(default="")
+
+    def to_dict(self)->dict:
+        return self.__dict__

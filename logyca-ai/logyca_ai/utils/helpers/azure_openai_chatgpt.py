@@ -19,7 +19,7 @@ class AzureOpenAIChatGPT():
             api_version=api_version
         )
     
-    def build_conversation_message_list(self,content:Content,advanced_image_recognition:bool=False,ocr_engine_path:str=None,output_temp_dir:str=None,cleanup_output_temp_dir_after_hours: int = 24)->list:
+    def build_conversation_message_list(self,content:Content,advanced_image_recognition:bool=False,ocr_engine_path:str=None,output_temp_dir:str=None,cleanup_output_temp_dir_after_hours: int = 24,just_extract_images:bool=False)->list:
         """
         Build the supported message list.
 
@@ -35,9 +35,11 @@ class AzureOpenAIChatGPT():
         :type output_temp_dir: str, optional
         :param cleanup_output_temp_dir_after_hours: Number of hours after which the files in the temporary directory will be deleted on the next call of the function.
         :type cleanup_output_temp_dir_after_hours: int, optional
+        :param just_extract_images: Only return image list from document
+        :type just_extract_images: bool, optional
 
         :return: Supported message list.
-        :rtype: str
+        :rtype: list
 
         :example:
 
@@ -55,7 +57,6 @@ class AzureOpenAIChatGPT():
         }
         ```
         """
-
 
         messages= []
 
@@ -75,6 +76,14 @@ class AzureOpenAIChatGPT():
                 else:
                     type_message = message.get("type",None)                
 
+                    if just_extract_images:
+                        is_valid = False
+                        just_extract_formats = PdfFileMessage.get_default_types() + MicrosoftFileMessage.get_default_types()
+                        if type_message in just_extract_formats:
+                            is_valid = True
+                        if is_valid is False:
+                            raise ValueError(f"just_extract_images is supported for the formats: {just_extract_formats}")
+
                     if type_message in ImageFileMessage.get_default_types():
                         additional_content = message.get("additional_content",None)
                         messages.append({"role":str(ContentRole.USER),"content":[
@@ -83,9 +92,12 @@ class AzureOpenAIChatGPT():
 
                     if type_message in PdfFileMessage.get_default_types():
                         additional_content = message.get("additional_content",None)
-                        messages.append({"role":str(ContentRole.USER),"content":
-                            PdfFileMessage(**additional_content).build_message_content(advanced_image_recognition=advanced_image_recognition,ocr_engine_path=ocr_engine_path,output_temp_dir=output_temp_dir,cleanup_output_temp_dir_after_hours=cleanup_output_temp_dir_after_hours)
-                        })
+                        if just_extract_images:
+                            return PdfFileMessage(**additional_content).build_message_content(just_extract_images=just_extract_images)
+                        else:
+                            messages.append({"role":str(ContentRole.USER),"content":
+                                PdfFileMessage(**additional_content).build_message_content(advanced_image_recognition=advanced_image_recognition,ocr_engine_path=ocr_engine_path,output_temp_dir=output_temp_dir,cleanup_output_temp_dir_after_hours=cleanup_output_temp_dir_after_hours)
+                            })
 
                     if type_message in PlainTextFileMessage.get_default_types():
                         additional_content = message.get("additional_content",None)
@@ -95,9 +107,12 @@ class AzureOpenAIChatGPT():
 
                     if type_message in MicrosoftFileMessage.get_default_types():
                         additional_content = message.get("additional_content",None)
-                        messages.append({"role":str(ContentRole.USER),"content":
-                            MicrosoftFileMessage(**additional_content).build_message_content(advanced_image_recognition=advanced_image_recognition,ocr_engine_path=ocr_engine_path,output_temp_dir=output_temp_dir,cleanup_output_temp_dir_after_hours=cleanup_output_temp_dir_after_hours)
-                        })                        
+                        if just_extract_images:
+                            return MicrosoftFileMessage(**additional_content).build_message_content(just_extract_images=just_extract_images)
+                        else:
+                            messages.append({"role":str(ContentRole.USER),"content":
+                                MicrosoftFileMessage(**additional_content).build_message_content(advanced_image_recognition=advanced_image_recognition,ocr_engine_path=ocr_engine_path,output_temp_dir=output_temp_dir,cleanup_output_temp_dir_after_hours=cleanup_output_temp_dir_after_hours)
+                            })                        
 
                     if user_message is not None and user_message!="":
                         messages.append({"role":str(ContentRole.USER),"content":user_message})

@@ -16,13 +16,18 @@ from logyca_ai import (
     TokeniserHelper,
     UserMessage,
 )
-from fastapi import Depends, APIRouter, Query
+from fastapi import Depends, APIRouter, Query, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from logyca import APIResultDTO, LogycaStatusEnum
 from starlette import status
 
 router = APIRouter(prefix="/api/v1/chatgpt/conversation", tags={"Azure ChatGPT4omni"})
+
+image_supported_formats = f"Image supported formats: {ImageFileMessage.get_supported_formats()}"
+pdf_supported_formats = f"Supported formats: {PdfFileMessage.get_supported_formats()}"
+plain_text_supported_formats = f"Supported formats: {PlainTextFileMessage.get_supported_formats()}"
+microsoft_supported_formats = f"Supported formats: {MicrosoftFileMessage.get_supported_formats()}"
 
 @router.post("/",
     responses={200:{'model':APIResultDTO}},
@@ -32,6 +37,7 @@ router = APIRouter(prefix="/api/v1/chatgpt/conversation", tags={"Azure ChatGPT4o
             <h2>Parameters</h2>
             <li>advanced_image_recognition: Used to extract text from images contained within documents using an OCR library. It does not apply to some files such as plain_text. Note: This extraction may consume additional ram memory.</li>
             <li>just_count_tokens: Count the tokens of the messages that will be sent to ChatGPT and return if they meet the capacity of the current model and version.</li>
+            <li>just_extract_images: It receives the same standard object but only extracts the images from the documents and returns them in base64, it does not carry out a conversation with chatgpt, therefore all the system and user parameters can be empty.<br>Microsoft and PDF files are supported.</li>
         </ul>
         <ul>
             <h2>Conversations</h2>            
@@ -44,22 +50,22 @@ router = APIRouter(prefix="/api/v1/chatgpt/conversation", tags={"Azure ChatGPT4o
             <li>Definitions for image files
                 <ul>
                     <li>Image resolutions: {ImageResolution.content_list()}</li>
-                    <li>Image supported formats: {ImageFileMessage.get_supported_formats()}.
+                    <li>{image_supported_formats}.
                 </ul>
             </li>
             <li>Definitions for pdf files
                 <ul>
-                    <li>Supported formats: {PdfFileMessage.get_supported_formats()}.
+                    <li>{pdf_supported_formats}.
                 </ul>
             </li>
             <li>Definitions for plain text files
                 <ul>
-                    <li>Supported formats: {PlainTextFileMessage.get_supported_formats()}.
+                    <li>{plain_text_supported_formats}.
                 </ul>
             </li>
             <li>Definitions for Microsoft files
                 <ul>
-                    <li>Supported formats: {MicrosoftFileMessage.get_supported_formats()}.
+                    <li>{microsoft_supported_formats}.
                 </ul>
             </li>
             <li>assistant: These messages contain the responses that the language model generates based on the previous messages in the conversation.</li>
@@ -67,10 +73,16 @@ router = APIRouter(prefix="/api/v1/chatgpt/conversation", tags={"Azure ChatGPT4o
     ''',
     status_code=status.HTTP_200_OK
     )
-async def conversation(content:Content, advanced_image_recognition:bool=False,just_count_tokens:bool=False, api_key: str = Depends(get_api_key)):
+async def conversation(content:Content, advanced_image_recognition:bool=False,just_count_tokens:bool=False, just_extract_images:bool=False, api_key: str = Depends(get_api_key)):
     chat=AzureOpenAIChatGPT(azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,api_key=settings.OPENAI_API_KEY,api_version=settings.OPENAI_API_VERSION)
-    messages = chat.build_conversation_message_list(content=content,advanced_image_recognition=advanced_image_recognition)
     aPIResultDTO=APIResultDTO()
+
+    if just_extract_images:
+        messages = chat.build_conversation_message_list(content=content,just_extract_images=just_extract_images)
+        aPIResultDTO.resultObject = messages
+        return JSONResponse(content=jsonable_encoder(aPIResultDTO.to_dict()),status_code=status.HTTP_200_OK)
+
+    messages = chat.build_conversation_message_list(content=content,advanced_image_recognition=advanced_image_recognition)
     if just_count_tokens is False:
         http_status,respond=await chat.conversation_async(model=settings.AZURE_OPENAI_DEPLOYMENT,messages=messages)
         if http_status == status.HTTP_200_OK:
@@ -99,7 +111,7 @@ async def conversation(content:Content, advanced_image_recognition:bool=False,ju
 
 @router.get("/simple_example/",
     responses={200:{'model':Content}},
-    summary='Scheme example of conversation for endpoint',
+    summary=f'Scheme example of conversation for endpoint',
     status_code=status.HTTP_200_OK
     )
 def simple_example(api_key: str = Depends(get_api_key)):
@@ -107,7 +119,7 @@ def simple_example(api_key: str = Depends(get_api_key)):
 
 @router.get("/image_example/",
     responses={200:{'model':Content}},
-    summary='Scheme example of conversation for endpoint',
+    summary=f'{image_supported_formats}',
     status_code=status.HTTP_200_OK
     )
 def image_example(image_sample_base64:bool=False,api_key: str = Depends(get_api_key)):    
@@ -115,7 +127,7 @@ def image_example(image_sample_base64:bool=False,api_key: str = Depends(get_api_
 
 @router.get("/pdf_example/",
     responses={200:{'model':Content}},
-    summary='Scheme example of conversation for endpoint',
+    summary=f'{pdf_supported_formats}',
     status_code=status.HTTP_200_OK
     )
 def pdf_example(pdf_sample_base64:bool=False,api_key: str = Depends(get_api_key)):    
@@ -123,7 +135,7 @@ def pdf_example(pdf_sample_base64:bool=False,api_key: str = Depends(get_api_key)
 
 @router.get("/plain_text_example/",
     responses={200:{'model':Content}},
-    summary='Scheme example of conversation for endpoint',
+    summary=f'{plain_text_supported_formats}',
     status_code=status.HTTP_200_OK
     )
 def plain_text_example(file_sample_base64:bool=False,api_key: str = Depends(get_api_key)):    
@@ -131,7 +143,7 @@ def plain_text_example(file_sample_base64:bool=False,api_key: str = Depends(get_
 
 @router.get("/microsoft_file_example/",
     responses={200:{'model':Content}},
-    summary='Scheme example of conversation for endpoint',
+    summary=f'{microsoft_supported_formats}',
     status_code=status.HTTP_200_OK
     )
 def microsoft_file_example(

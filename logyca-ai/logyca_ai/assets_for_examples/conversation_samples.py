@@ -17,6 +17,12 @@ from logyca_ai.utils.constants.image import ImageResolution
 from logyca_ai.utils.helpers.content_loaders import load_text_from_url
 import base64
 
+URL_PNG="https://raw.githubusercontent.com/logyca/python-libraries/main/logyca-ai/logyca_ai/assets_for_examples/file_or_documents/image.png"
+URL_PDF="https://raw.githubusercontent.com/logyca/python-libraries/main/logyca-ai/logyca_ai/assets_for_examples/file_or_documents/pdf.pdf"
+URL_CSV="https://raw.githubusercontent.com/logyca/python-libraries/main/logyca-ai/logyca_ai/assets_for_examples/file_or_documents/plain_text.csv"
+URL_DOCX="https://raw.githubusercontent.com/logyca/python-libraries/main/logyca-ai/logyca_ai/assets_for_examples/file_or_documents/ms_word.docx"
+URL_XLSX="https://raw.githubusercontent.com/logyca/python-libraries/main/logyca-ai/logyca_ai/assets_for_examples/file_or_documents/ms_excel.xlsx"
+
 def encode_str_base64(message: str) -> str:
     """
     Encodes a given message into Base64.
@@ -62,7 +68,7 @@ def get_content_image_sample(image_sample_base64:bool=False)->Content:
         image_format="png"
         type_message=ContentType.IMAGE_BASE64
     else:
-        base64_content_or_url="https://raw.githubusercontent.com/logyca/python-libraries/main/logyca-ai/logyca_ai/assets_for_examples/file_or_documents/image.png"
+        base64_content_or_url=URL_PNG
         image_format=ContentType.IMAGE_URL
         type_message=ContentType.IMAGE_URL
     return Content(
@@ -90,7 +96,7 @@ def get_content_pdf_sample(pdf_sample_base64:bool=False)->Content:
         pdf_format="pdf"
         type_message=ContentType.PDF_BASE64
     else:
-        base64_content_or_url="https://raw.githubusercontent.com/logyca/python-libraries/main/logyca-ai/logyca_ai/assets_for_examples/file_or_documents/pdf.pdf"
+        base64_content_or_url=URL_PDF
         pdf_format=ContentType.PDF_URL
         type_message=ContentType.PDF_URL
     return Content(
@@ -117,7 +123,7 @@ def get_content_plain_text_sample(file_sample_base64:bool=False)->Content:
         file_format="csv"
         type_message=ContentType.PLAIN_TEXT_BASE64
     else:
-        base64_content_or_url="https://raw.githubusercontent.com/logyca/python-libraries/main/logyca-ai/logyca_ai/assets_for_examples/file_or_documents/plain_text.csv"
+        base64_content_or_url=URL_CSV
         file_format=ContentType.PLAIN_TEXT_URL
         type_message=ContentType.PLAIN_TEXT_URL
     return Content(
@@ -155,9 +161,9 @@ def get_content_microsoft_sample(file_sample_base64:bool=False,extension_for_exa
         type_message=ContentType.MS_BASE64
     else:
         if extension_for_example == "docx":
-            base64_content_or_url="https://raw.githubusercontent.com/logyca/python-libraries/main/logyca-ai/logyca_ai/assets_for_examples/file_or_documents/ms_word.docx"
+            base64_content_or_url=URL_DOCX
         elif extension_for_example == "xlsx":
-            base64_content_or_url="https://raw.githubusercontent.com/logyca/python-libraries/main/logyca-ai/logyca_ai/assets_for_examples/file_or_documents/ms_excel.xlsx"
+            base64_content_or_url=URL_XLSX
         else:
             base64_content_or_url="No example available at this time."
         file_format=ContentType.MS_URL
@@ -179,3 +185,4 @@ def get_content_microsoft_sample(file_sample_base64:bool=False,extension_for_exa
             )
         ]
     )
+

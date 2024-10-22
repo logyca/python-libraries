@@ -3,13 +3,17 @@ from logyca_ai.utils.constants.image import ImageResolution
 from logyca_ai.utils.constants.ocr import OCREngineSettings
 from logyca_ai.utils.helpers.content_loaders import save_base64_to_file, save_file_from_url, load_text_from_url, decode_base64_to_str
 from logyca_ai.utils.helpers.general_utils import get_random_name_datetime, delete_files_by_modification_hours, get_file_name_extension_from_url
-from logyca_ai.utils.helpers.text_extraction_microsoft import extract_text_from_docx_file, extract_text_from_excel_file
-from logyca_ai.utils.helpers.text_extraction_pdf import extract_text_from_pdf_file
+from logyca_ai.utils.helpers.text_extraction_microsoft import extract_text_from_docx_file, extract_text_from_excel_file, extract_images_excel_file, extract_images_from_docx_file
+from logyca_ai.utils.helpers.text_extraction_pdf import extract_text_from_pdf_file, extract_images_from_pdf_file
 from pydantic import BaseModel, AliasChoices, Field, model_validator
 from typing import Any
+import csv
+import io
+import json
 import os
 
 class MessageExceptionErrors:
+    INVALID_FILE_FORMAT="Invalid file format: {}. Check the file structure and format."
     UNSUPPORTED_FILE_FORMAT="Unsupported file format: {}"
     UNSUPPORTED_IMAGE_FORMAT="Unsupported image format: {}"
     UNSUPPORTED_MICROSOFT_FORMAT="Unsupported microsoft format: {}"
@@ -136,7 +140,7 @@ class PdfFileMessage(BaseModel):
     def get_default_types(cls)->list:        
         return [ContentType.PDF_URL,ContentType.PDF_BASE64]
 
-    def build_message_content(self,advanced_image_recognition:bool=False,ocr_engine_path:str=None,output_temp_dir:str=None,cleanup_output_temp_dir_after_hours: int = 24)->str|None:
+    def build_message_content(self,advanced_image_recognition:bool=False,ocr_engine_path:str=None,output_temp_dir:str=None,cleanup_output_temp_dir_after_hours: int = 24,just_extract_images:bool=False)->str|list|None:
         """
         Build the supported message list.
 
@@ -152,6 +156,8 @@ class PdfFileMessage(BaseModel):
         :type output_temp_dir: str, optional
         :param cleanup_output_temp_dir_after_hours: Number of hours after which the files in the temporary directory will be deleted on the next call of the function.
         :type cleanup_output_temp_dir_after_hours: int, optional
+        :param just_extract_images: Return list of images in document
+        :type just_extract_images: bool, optional
 
         :return: Supported message list.
         :rtype: str
@@ -164,15 +170,21 @@ class PdfFileMessage(BaseModel):
         pdf_tmp_to_work = os.path.abspath(os.path.join(output_temp_dir,pdf_filename))
         if self.pdf_format == ContentType.PDF_URL:
             save_file_from_url(self.base64_content_or_url,output_temp_dir,pdf_filename)
-            pdf_text=extract_text_from_pdf_file(pdf_tmp_to_work,advanced_image_recognition=advanced_image_recognition,ocr_engine_path=ocr_engine_path,output_temp_dir=output_temp_dir)
+            if just_extract_images:
+                pdf_data=extract_images_from_pdf_file(pdf_tmp_to_work)
+            else:
+                pdf_data=extract_text_from_pdf_file(pdf_tmp_to_work,advanced_image_recognition=advanced_image_recognition,ocr_engine_path=ocr_engine_path,output_temp_dir=output_temp_dir)
             os.remove(pdf_tmp_to_work)
-            return pdf_text
+            return pdf_data
         else:
             if(self.__get_pdf_formats(self.pdf_format) is None): raise ValueError(MessageExceptionErrors.UNSUPPORTED_PDF_FORMAT.format(self.pdf_format))
             save_base64_to_file(self.base64_content_or_url,output_temp_dir,pdf_filename)
-            pdf_text=extract_text_from_pdf_file(pdf_tmp_to_work,advanced_image_recognition=advanced_image_recognition,ocr_engine_path=ocr_engine_path,output_temp_dir=output_temp_dir)
+            if just_extract_images:
+                pdf_data=extract_images_from_pdf_file(pdf_tmp_to_work)
+            else:
+                pdf_data=extract_text_from_pdf_file(pdf_tmp_to_work,advanced_image_recognition=advanced_image_recognition,ocr_engine_path=ocr_engine_path,output_temp_dir=output_temp_dir)
             os.remove(pdf_tmp_to_work)
-            return pdf_text            
+            return pdf_data            
 
 class PlainTextFileMessage(BaseModel):
     base64_content_or_url: str = Field(default="",validation_alias=AliasChoices("base64_content_or_url"))
@@ -189,6 +201,7 @@ class PlainTextFileMessage(BaseModel):
         file_formats={
             "txt":"txt",
             "csv":"csv",
+            "json":"json",
         }
         if extension is None:
             return file_formats
@@ -205,12 +218,36 @@ class PlainTextFileMessage(BaseModel):
 
     def build_message_content(self)->str|None:
         if self.file_format == ContentType.PLAIN_TEXT_URL:
-            plain_text=load_text_from_url(self.base64_content_or_url)
-            return plain_text
+            file_name, file_extension=get_file_name_extension_from_url(self.base64_content_or_url)
         else:
-            if(self.__get_file_formats(self.file_format) is None): raise ValueError(MessageExceptionErrors.UNSUPPORTED_FILE_FORMAT.format(self.file_format))
+            file_extension = self.file_format
+        
+        if(self.__get_file_formats(file_extension) is None): raise ValueError(MessageExceptionErrors.UNSUPPORTED_FILE_FORMAT.format(file_extension))
+        
+        if self.file_format == ContentType.PLAIN_TEXT_URL:
+            plain_text=load_text_from_url(self.base64_content_or_url)
+        else:
             plain_text=decode_base64_to_str(self.base64_content_or_url)
-            return plain_text
+        
+        if file_extension == "json":
+            try:
+                content_json = json.loads(plain_text)
+                content_txt = json.dumps(content_json)
+            except:
+                raise ValueError(MessageExceptionErrors.INVALID_FILE_FORMAT.format(file_extension))
+        elif file_extension == "csv":
+            try:
+                content_obj = io.StringIO(plain_text)
+                content_list = [row for row in csv.reader(content_obj)]                
+                content_txt = content_obj.getvalue()
+                content_obj.close()
+            except:
+                raise ValueError(MessageExceptionErrors.INVALID_FILE_FORMAT.format(file_extension))
+        else:
+            content_txt = plain_text
+
+        return content_txt
+        
 
 class MicrosoftFileMessage(BaseModel):
     base64_content_or_url: str = Field(default="",validation_alias=AliasChoices("base64_content_or_url"))
@@ -258,7 +295,7 @@ class MicrosoftFileMessage(BaseModel):
     def get_default_types(cls)->list:        
         return [ContentType.MS_URL,ContentType.MS_BASE64]
 
-    def build_message_content(self,advanced_image_recognition:bool=False,ocr_engine_path:str=None,output_temp_dir:str=None,cleanup_output_temp_dir_after_hours: int = 24)->str|None:
+    def build_message_content(self,advanced_image_recognition:bool=False,ocr_engine_path:str=None,output_temp_dir:str=None,cleanup_output_temp_dir_after_hours: int = 24,just_extract_images:bool=False)->str|None:
         """
         Build the supported message list.
 
@@ -274,6 +311,8 @@ class MicrosoftFileMessage(BaseModel):
         :type output_temp_dir: str, optional
         :param cleanup_output_temp_dir_after_hours: Number of hours after which the files in the temporary directory will be deleted on the next call of the function.
         :type cleanup_output_temp_dir_after_hours: int, optional
+        :param just_extract_images: Return list of images in document
+        :type just_extract_images: bool, optional
 
         :return: Supported message list.
         :rtype: str
@@ -295,10 +334,16 @@ class MicrosoftFileMessage(BaseModel):
             save_base64_to_file(self.base64_content_or_url,output_temp_dir,ms_filename)
             file_extension = self.file_format
         if self.__get_word_extensions(file_extension) is not None:
-            file_text=extract_text_from_docx_file(ms_tmp_to_work,advanced_image_recognition=advanced_image_recognition,ocr_engine_path=ocr_engine_path,output_temp_dir=output_temp_dir)
+            if just_extract_images:
+                file_data=extract_images_from_docx_file(ms_tmp_to_work)
+            else:
+                file_data=extract_text_from_docx_file(ms_tmp_to_work,advanced_image_recognition=advanced_image_recognition,ocr_engine_path=ocr_engine_path,output_temp_dir=output_temp_dir)
         elif self.__get_excel_extensions(file_extension) is not None:
-            file_text=extract_text_from_excel_file(ms_tmp_to_work,advanced_image_recognition=advanced_image_recognition,ocr_engine_path=ocr_engine_path,output_temp_dir=output_temp_dir)
+            if just_extract_images:
+                file_data=extract_images_excel_file(ms_tmp_to_work)
+            else:
+                file_data=extract_text_from_excel_file(ms_tmp_to_work,advanced_image_recognition=advanced_image_recognition,ocr_engine_path=ocr_engine_path,output_temp_dir=output_temp_dir)
         else:
-            file_text=""
+            file_data=""
         os.remove(ms_tmp_to_work)
-        return file_text
+        return file_data

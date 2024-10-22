@@ -1,10 +1,14 @@
 from logyca_ai.utils.constants.ocr import OCREngine, OCREngineSettings
+from logyca_ai.utils.helpers.garbage_collector_helper import garbage_collector_at_the_end
+from logyca_ai.utils.schemes.output.conversations import ImageBase64
 from PIL import Image # Pillow
+import base64
 import fitz  # PyMuPDF
 import os
 import pytesseract
 
-def extract_text_from_pdf_file(filename_full_path:str,advanced_image_recognition:bool=False,ocr_engine_path:str=None,output_temp_dir:str=None):
+@garbage_collector_at_the_end
+def extract_text_from_pdf_file(filename_full_path:str,advanced_image_recognition:bool=False,ocr_engine_path:str=None,output_temp_dir:str=None)->str:
     """
     Extracts text from a PDF file.
 
@@ -71,3 +75,48 @@ def extract_text_from_pdf_file(filename_full_path:str,advanced_image_recognition
 
     doc.close()
     return text
+
+@garbage_collector_at_the_end
+def extract_images_from_pdf_file(filename_full_path:str)->list:
+    """
+    Image extract from a PDF file.
+
+    :param filename_full_path: Full path to the PDF file from which to extract text.
+    :type filename_full_path: str
+
+    :return: Images from the PDF file.
+    :rtype: list[base64]
+
+    :raises FileNotFoundError: If the specified PDF file is not found.
+
+    :example:
+
+    # Example usage
+    ```python
+    image_list = extract_images_from_pdf_file('/tmp/example.pdf')
+    ```
+
+    """
+
+    doc = fitz.open(filename_full_path)
+    images = []
+
+    for page_num in range(len(doc)):
+        page = doc.load_page(page_num)
+
+        image_list = page.get_images(full=True)
+        for img_index, img in enumerate(image_list):
+            xref = img[0]
+            base_image = doc.extract_image(xref)
+            image_bytes = base_image["image"]
+            image_format = base_image["ext"]
+            image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+            images.append(ImageBase64(
+                image_base64=image_base64,
+                image_format=image_format
+                ).to_dict()
+            )
+
+    doc.close()
+    return images
+

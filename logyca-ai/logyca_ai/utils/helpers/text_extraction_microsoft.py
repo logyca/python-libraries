@@ -2,13 +2,16 @@ from docx import Document # python-docx
 from io import BytesIO
 from logyca_ai.utils.constants.ocr import OCREngine, OCREngineSettings
 from logyca_ai.utils.helpers.garbage_collector_helper import garbage_collector_at_the_end
+from logyca_ai.utils.schemes.output.conversations import ImageBase64
 from openpyxl import load_workbook
 from PIL import Image  # Pillow
+import base64
 import json
 import os
 import pandas as pd
 import pytesseract
 
+@garbage_collector_at_the_end
 def extract_text_from_docx_file(filename_full_path:str,advanced_image_recognition:bool=False,ocr_engine_path:str=None,output_temp_dir:str=None):
     """
     Extracts text from a DOCX file.
@@ -49,10 +52,9 @@ def extract_text_from_docx_file(filename_full_path:str,advanced_image_recognitio
         text += paragraph.text + "\n"
 
     if advanced_image_recognition:
-        for rel in doc.inline_shapes:
-            if rel.type.value == 3:  # Type 3 corresponds to images
-                rId = rel._inline.graphic.graphicData.pic.blipFill.blip.embed
-                image_part = doc.part.related_parts[rId]
+        for rel in doc.part.rels.values():
+            if "image" in rel.target_ref:
+                image_part = rel.target_part
                 image_bytes = image_part.image.blob
 
                 image = Image.open(BytesIO(image_bytes))
@@ -60,6 +62,43 @@ def extract_text_from_docx_file(filename_full_path:str,advanced_image_recognitio
                 text += ocr_text
 
     return text
+
+@garbage_collector_at_the_end
+def extract_images_from_docx_file(filename_full_path:str)->list:
+    """
+    Extracts text from a DOCX file.
+
+    :param filename_full_path: Full path to the DOCX file from which to extract text.
+    :type filename_full_path: str
+
+    :return: Extracted text from the DOCX file.
+    :rtype: list
+
+    :raises FileNotFoundError: If the specified DOCX file is not found.
+    :raises ValueError: If the OCR path is invalid.
+    """
+
+    doc = Document(filename_full_path)
+    images = []
+
+    for rel in doc.part.rels.values():
+        if "image" in rel.target_ref:
+            image_part = rel.target_part
+            image_bytes = image_part.image.blob
+
+            img = Image.open(BytesIO(image_bytes))
+            image_format = img.format if img.format else "PNG"            
+            buffered = BytesIO()
+            img.save(buffered, format=image_format)
+            image_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
+            images.append(ImageBase64(
+                image_base64=image_base64,
+                image_format=image_format
+                ).to_dict()
+            )
+            del buffered
+
+    return images
 
 @garbage_collector_at_the_end
 def extract_text_from_excel_file(filename_full_path: str, advanced_image_recognition: bool = False, ocr_engine_path: str = None, output_temp_dir: str = None,format_output:str="json"):
@@ -149,3 +188,33 @@ def extract_text_from_excel_file(filename_full_path: str, advanced_image_recogni
     json_result = json.dumps(result,default=str)
     # print(json_result)
     return json_result
+
+@garbage_collector_at_the_end
+def extract_images_excel_file(filename_full_path: str)->list:
+    """
+    Extracts text from an Excel file including all sheets and any embedded images.
+
+    :param filename_full_path: Full path to the Excel file from which to extract text.
+    :rtype: list
+    """
+
+    workbook = load_workbook(filename_full_path, data_only=True)
+    images = []
+    for sheet_name in workbook.sheetnames:
+        sheet = workbook[sheet_name]
+        for image in sheet._images:
+            img = Image.open(BytesIO(image._data()))
+            image_format = img.format if img.format else "PNG"            
+            buffered = BytesIO()
+            img.save(buffered, format=image_format)
+            image_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
+            images.append(ImageBase64(
+                image_base64=image_base64,
+                image_format=image_format
+                ).to_dict()
+            )
+            del buffered
+        del sheet
+    del workbook
+
+    return images
