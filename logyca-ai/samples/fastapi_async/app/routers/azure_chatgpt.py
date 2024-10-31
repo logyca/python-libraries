@@ -144,7 +144,7 @@ def plain_text_example(file_sample_base64:bool=False,api_key: str = Depends(get_
 @router.get("/microsoft_file_example/",
     responses={200:{'model':Content}},
     summary=f'{microsoft_supported_formats}',
-    description='''The extracted excel sheets would have this format if json is chosen<br>
+    description='''The extracted Excel sheets that have the characteristic of being visible would have this format if json is chosen:<br>
     <br> {
     <br>     "sheet_name": {
     <br>         "content": [["", "", "", ""],["", "", "", ""]],
@@ -152,6 +152,7 @@ def plain_text_example(file_sample_base64:bool=False,api_key: str = Depends(get_
     <br>         },
     <br> }
     <br> To interact with ChatGPT, you can refer that when searching for information in all sheets, you can specify some customization in sheet_name and its content and image_text.
+    <br> You can customize extracting text from non-visible sheets.
     ''',
     status_code=status.HTTP_200_OK
     )
