@@ -346,3 +346,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New functionalities are added to extract images from documents in base64 lists: extract_images_from_pdf_file, extract_images_from_docx_file
 - The Swagger documentation is improved in the FastAPI example, adding the parameter: just_extract_images to the POST method to use the new document image extraction features.
 
+## [0.2.3] - 2024-10-31
+### Added
+- new functionality when extracting text in Excel, you can select only extraction of visible sheets or all sheets.

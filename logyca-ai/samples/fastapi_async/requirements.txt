@@ -1,7 +1,7 @@
 aiohttp==3.9.5
 fastapi==0.110.1
 gunicorn==21.2.0 # For production
-logyca_ai==0.2.2rc1
+logyca_ai==0.2.3
 logyca[api_key_simple_auth]==0.1.18
 openai==1.37.1
 openpyxl==3.1.5

@@ -24,6 +24,7 @@ class ConversationAnswer(BaseModel):
 class ImageBase64(BaseModel):
     image_base64:str = Field(default="")
     image_format:str = Field(default="")
+    sheet_name:str = Field(default="")
 
     def to_dict(self)->dict:
         return self.__dict__
