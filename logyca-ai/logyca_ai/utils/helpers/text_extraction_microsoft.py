@@ -93,7 +93,8 @@ def extract_images_from_docx_file(filename_full_path:str)->list:
             image_bytes = image_part.image.blob
 
             img = Image.open(BytesIO(image_bytes))
-            image_format = img.format if img.format else "PNG"            
+            image_format = img.format if img.format else "PNG"
+            image_format = str(image_format).lower()
             buffered = BytesIO()
             img.save(buffered, format=image_format)
             image_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
@@ -244,7 +245,8 @@ def extract_images_excel_file(filename_full_path: str,only_sheet_visibility_enab
         if make_extraction is True:
             for image in sheet._images:
                 img = Image.open(BytesIO(image._data()))
-                image_format = img.format if img.format else "PNG"            
+                image_format = img.format if img.format else "PNG"
+                image_format = str(image_format).lower()
                 buffered = BytesIO()
                 img.save(buffered, format=image_format)
                 image_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")

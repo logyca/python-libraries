@@ -349,3 +349,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.3] - 2024-10-31
 ### Added
 - new functionality when extracting text in Excel, you can select only extraction of visible sheets or all sheets.
+
+## [0.2.4] - 2024-11-01
+### Fixed
+- Minimum adjustment when extracting images from an Excel file, leaving the extension in lowercase in the result.
+
+
