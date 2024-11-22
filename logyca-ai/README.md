@@ -354,4 +354,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Minimum adjustment when extracting images from an Excel file, leaving the extension in lowercase in the result.
 
+## [0.2.5] - 2024-11-22
+### Fixed
+- __init__.py: Adjustment to which items will be available when the package is imported
+
 

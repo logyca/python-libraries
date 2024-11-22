@@ -37,4 +37,4 @@ from logyca_ai.utils.schemes.input.conversations import (
     PlainTextFileMessage,
     UserMessage,
     )
-from logyca_ai.utils.schemes.output.conversations import ImageBase64
+from logyca_ai.utils.schemes.output.conversations import ImageBase64, ConversationAnswer, ConversationUsage
