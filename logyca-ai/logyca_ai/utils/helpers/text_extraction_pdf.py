@@ -1,3 +1,4 @@
+from io import BytesIO
 from logyca_ai.utils.constants.ocr import OCREngine, OCREngineSettings
 from logyca_ai.utils.helpers.garbage_collector_helper import garbage_collector_at_the_end
 from logyca_ai.utils.schemes.output.conversations import ImageBase64
@@ -8,12 +9,12 @@ import os
 import pytesseract
 
 @garbage_collector_at_the_end
-def extract_text_from_pdf_file(filename_full_path:str,advanced_image_recognition:bool=False,ocr_engine_path:str=None,output_temp_dir:str=None)->str:
+def extract_text_from_pdf_file(filename_full_path:str|BytesIO,advanced_image_recognition:bool=False,ocr_engine_path:str=None,output_temp_dir:str=None)->str:
     """
     Extracts text from a PDF file.
 
-    :param filename_full_path: Full path to the PDF file from which to extract text.
-    :type filename_full_path: str
+    :param filename_full_path: Full path to the PDF file from which to extract text or file loaded in BytesIO RAM memory.
+    :type filename_full_path: str|BytesIO
     :param advanced_image_recognition: Indicates whether to perform text recognition on images within the PDF.
                                If True, OCR techniques will be used to extract text from images.
     :type advanced_image_recognition: bool
@@ -44,7 +45,10 @@ def extract_text_from_pdf_file(filename_full_path:str,advanced_image_recognition
         else:
             pytesseract.pytesseract.tesseract_cmd=ocr_engine_path
 
-    doc = fitz.open(filename_full_path)
+    if(isinstance(filename_full_path,str)):
+        doc = fitz.open(filename_full_path, filetype="pdf")
+    else:
+        doc = fitz.open(stream=filename_full_path, filetype="pdf")
 
     text = ""
     if output_temp_dir is None:
@@ -77,12 +81,12 @@ def extract_text_from_pdf_file(filename_full_path:str,advanced_image_recognition
     return text
 
 @garbage_collector_at_the_end
-def extract_images_from_pdf_file(filename_full_path:str)->list:
+def extract_images_from_pdf_file(filename_full_path:str|BytesIO)->list:
     """
     Image extract from a PDF file.
 
-    :param filename_full_path: Full path to the PDF file from which to extract text.
-    :type filename_full_path: str
+    :param filename_full_path: Full path to the PDF file from which to extract text or file loaded in BytesIO RAM memory.
+    :type filename_full_path: str|BytesIO
 
     :return: Images from the PDF file.
     :rtype: list[base64]
@@ -97,8 +101,10 @@ def extract_images_from_pdf_file(filename_full_path:str)->list:
     ```
 
     """
-
-    doc = fitz.open(filename_full_path)
+    if(isinstance(filename_full_path,str)):
+        doc = fitz.open(filename_full_path, filetype="pdf")
+    else:
+        doc = fitz.open(stream=filename_full_path, filetype="pdf")
     images = []
 
     for page_num in range(len(doc)):

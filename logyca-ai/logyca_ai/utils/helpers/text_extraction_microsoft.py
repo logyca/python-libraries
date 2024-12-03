@@ -18,12 +18,12 @@ class ExcelSheetStates(StrEnum):
     VISIBLE = "visible"
 
 @garbage_collector_at_the_end
-def extract_text_from_docx_file(filename_full_path:str,advanced_image_recognition:bool=False,ocr_engine_path:str=None,output_temp_dir:str=None):
+def extract_text_from_docx_file(filename_full_path:str|BytesIO,advanced_image_recognition:bool=False,ocr_engine_path:str=None,output_temp_dir:str=None):
     """
     Extracts text from a DOCX file.
 
-    :param filename_full_path: Full path to the DOCX file from which to extract text.
-    :type filename_full_path: str
+    :param filename_full_path: Full path to the DOCX file from which to extract text or file loaded in BytesIO RAM memory.
+    :type filename_full_path: str|BytesIO
     :param advanced_image_recognition: Indicates whether to perform text recognition on images within the DOCX.
                                If True, OCR techniques will be used to extract text from images.
     :type advanced_image_recognition: bool
@@ -70,12 +70,12 @@ def extract_text_from_docx_file(filename_full_path:str,advanced_image_recognitio
     return text
 
 @garbage_collector_at_the_end
-def extract_images_from_docx_file(filename_full_path:str)->list:
+def extract_images_from_docx_file(filename_full_path:str|BytesIO)->list:
     """
     Extracts text from a DOCX file.
 
-    :param filename_full_path: Full path to the DOCX file from which to extract text.
-    :type filename_full_path: str
+    :param filename_full_path: Full path to the DOCX file from which to extract text or file loaded in BytesIO RAM memory.
+    :type filename_full_path: str|BytesIO
 
     :return: Extracted text from the DOCX file.
     :rtype: list
@@ -108,11 +108,11 @@ def extract_images_from_docx_file(filename_full_path:str)->list:
     return images
 
 @garbage_collector_at_the_end
-def extract_text_from_excel_file(filename_full_path: str, advanced_image_recognition: bool = False, ocr_engine_path: str = None, output_temp_dir: str = None,format_output:str="json",only_sheet_visibility_enabled:bool=True):
+def extract_text_from_excel_file(filename_full_path: str|BytesIO, advanced_image_recognition: bool = False, ocr_engine_path: str = None, output_temp_dir: str = None,format_output:str="json",only_sheet_visibility_enabled:bool=True):
     """
     Extracts text from an Excel file including all sheets and any embedded images.
 
-    :param filename_full_path: Full path to the Excel file from which to extract text.
+    :param filename_full_path: Full path to the Excel file from which to extract text or file loaded in BytesIO RAM memory.
     :param advanced_image_recognition: Indicates whether to perform OCR on images within the Excel file.
     :param ocr_engine_path: Path to the OCR executable.
     :param output_temp_dir: Temporary directory for storing output files.
@@ -220,11 +220,11 @@ def extract_text_from_excel_file(filename_full_path: str, advanced_image_recogni
     return json_result
 
 @garbage_collector_at_the_end
-def extract_images_excel_file(filename_full_path: str,only_sheet_visibility_enabled:bool=True)->list:
+def extract_images_excel_file(filename_full_path: str|BytesIO,only_sheet_visibility_enabled:bool=True)->list:
     """
     Extracts text from an Excel file including all sheets and any embedded images.
 
-    :param filename_full_path: Full path to the Excel file from which to extract text.
+    :param filename_full_path: Full path to the Excel file from which to extract text or file loaded in BytesIO RAM memory.
     :rtype: list
     :param only_sheet_visibility_enabled: When looping through excel sheets, filter those with visible status if true, if false, do not loop through sheets with another status.
     :rtype: bool

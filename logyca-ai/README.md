@@ -358,4 +358,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - __init__.py: Adjustment to which items will be available when the package is imported
 
+## [0.2.6] - 2024-12-02
+### Added
+- Read pdf files from disk or ram memory
+
+
 
