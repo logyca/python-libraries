@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from environment_var_definitions import Environment
+from app.schemes.input.environment import Environment
 from logyca import parse_bool
 from pathlib import Path
 import os

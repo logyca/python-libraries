@@ -1,4 +1,4 @@
-from config import settings
+from app.internal.config import settings
 import json
 
 print(json.dumps(settings.__dict__,indent=4))
