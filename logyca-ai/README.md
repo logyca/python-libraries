@@ -362,5 +362,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Read pdf files from disk or ram memory
 
+## [0.2.7,0.2.8] - 2024-12-18
+### Fixed
+- Improve prompt engineer for data extraction in Excel, specifying the JSON spreadsheet format used in data extraction.
+
 
 

@@ -171,12 +171,12 @@ def get_content_microsoft_sample(file_sample_base64:bool=False,extension_for_exa
     return Content(
         system="""
                 No uses lenguaje natural para la respuesta.
-                Dame la información que puedas extraer de la imagen en formato JSON.
+                Te voy a enviar una hoja de calculo en formato JSON.
                 Solo devuelve la información, no formatees con caracteres adicionales la respuesta.
                 """.strip(),
         messages=[
             UserMessage(
-                user="Dame los siguientes datos: Expediente, radicación, Fecha, Numero de registro, Vigencia.",
+                user="Extrae los siguientes datos: Expediente, radicación, Fecha, Numero de registro, Vigencia, nombre del director tecnico",
                 type=type_message,
                 additional_content=MicrosoftFileMessage(
                     base64_content_or_url=base64_content_or_url,
