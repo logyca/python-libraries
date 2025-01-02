@@ -2,8 +2,9 @@ from logyca.schemas.input.api_key import APIKeyScheme
 from fastapi import Security, HTTPException
 from fastapi.security.api_key import APIKeyHeader
 from starlette.status import HTTP_403_FORBIDDEN
+import os
 
-header_value="x-api-key"
+header_value=os.getenv('API_KEY_NAME','x-api-key')
 
 auth_scheme_api_key_header = APIKeyHeader(name=header_value, auto_error=False)
 

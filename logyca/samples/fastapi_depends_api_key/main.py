@@ -1,13 +1,16 @@
 from fastapi import FastAPI, Depends
-from logyca import APIKeyScheme, APIKey
 import os
 import uvicorn
 
-API_KEY=os.getenv('API_KEY','password_key')
+# The name of the api key will be read from the environment variables or will be assigned by default with the value "x-api-key"
+# os.environ["API_KEY_NAME"] = "x-api-key-other-value"
+from logyca import APIKeyScheme, APIKey
+
+API_KEY_VALUE=os.getenv('API_KEY_VALUE','password_key')
 
 app = FastAPI()
 
-settings_api_key=APIKeyScheme(key=API_KEY, enable=True)
+settings_api_key=APIKeyScheme(key=API_KEY_VALUE, enable=True)
 get_api_key = APIKey(settings_api_key)
 
 @app.get("/data/")

@@ -390,3 +390,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.18] - 2024-08-16
 ### Fixed
 - Example of auth apkey with dockerfile and dependencies that were missing when installing the library is added.
+
+## [0.1.19] - 2025-01-02
+### Added
+- To the from logyca import APIKeyScheme, APIKey functionality to validate an endpoint api_key: str = Depends(get_api_key), the ability to choose the name of the api key is added, by default the value is "x-api-key". To change the name you must configure the environment variable API_KEY_NAME. Example: os.environ["API_KEY_NAME"] = "x-api-key-other-value".
