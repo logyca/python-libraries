@@ -94,8 +94,10 @@ def check(api_key: str = Depends(verify_api_key_mon)):
     if exist_alert is True:
         apiFilterExceptionDTO=ApiFilterExceptionDTO()
         apiFilterExceptionDTO.message="Existing alert"
+        apiFilterExceptionDTO.isError = True
         apiFilterExceptionDTO.logycaStatus=LogycaStatusEnum.UnAvailable
         apiFilterExceptionDTO.status=LogycaStatusEnum.UnAvailable.mappingHttpStatusCode
         apiResultDTO.apiException=apiFilterExceptionDTO
+        apiResultDTO.dataError = True
     
     return JSONResponse(content=apiResultDTO.to_dict(),status_code=HTTP_200_OK)
