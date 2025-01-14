@@ -83,7 +83,8 @@ def check(api_key: str = Depends(verify_api_key_mon)):
         listHealth.append(HealthDTO(name=f'[Live Test] Expiration days for {APP_REGISTRATION_CLIENT_SECRET_NAME}: [{difference_in_days}]',status=HealthEnum.Ok,description='Ok').to_dict())
     # Simulate http request
     result_http_request = 501
-    listHealth.append(HealthDTO(name='[Print Test] Check Connect API',status=HealthEnum.Critical,description=f'Error - http status code: {result_http_request}').to_dict())
+    logyca_status_code = LogycaStatusEnum.from_http_status_code(result_http_request)
+    listHealth.append(HealthDTO(name='[Print Test] Check Connect API',status=HealthEnum.Critical,description=f'Error - http status code: {result_http_request}, logyca_status_code: {logyca_status_code}').to_dict())
 
     apiResultDTO=APIResultDTO()
     apiResultDTO.resultMessage='Health check'
