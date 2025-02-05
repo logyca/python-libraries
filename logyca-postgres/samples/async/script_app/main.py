@@ -22,13 +22,13 @@ The connection pool (pool_size) after the first query will remain open until the
 '''
 
 async def methods(async_session:AsyncSession):
-    status, date_time_check_conn = await check_connection_async(async_session)
+    status, date_time_or_exception_error = await check_connection_async(async_session)
     if(status):
         query = text_to_sql("SELECT now();")
         result = await async_session.execute(query)
         simulated_query = result.scalar_one_or_none()
         await commit_rollback_async(async_session)
-        print(f"date_time_check_conn={date_time_check_conn},simulated_query={simulated_query}")
+        print(f"date_time_or_exception_error={date_time_or_exception_error},simulated_query={simulated_query}")
     else:
         print("async_session connect db error...")
 async def main():

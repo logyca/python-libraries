@@ -313,3 +313,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Readme upgrade
 
+## [0.1.6] - 2025-01-15
+### Fixed
+- Fix check_connection_sync, check_connection_async error message
+

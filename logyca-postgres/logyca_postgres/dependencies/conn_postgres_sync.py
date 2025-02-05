@@ -183,7 +183,7 @@ class SyncConnEngine(metaclass=Singleton):
 
 def check_connection_sync(sync_session: Session)->tuple[bool,str]:
     '''Description
-    :return tuple[bool,str]: status, date_time now'''    
+    :return tuple[bool,str]: status, date_time_or_exception_error'''    
     try:
         query = text_to_sql(f"SELECT now();")
         result = sync_session.execute(query)
@@ -193,8 +193,7 @@ def check_connection_sync(sync_session: Session)->tuple[bool,str]:
         else:
            return False, ''
     except Exception as e:
-        print(str(e))
-        return False, ''
+        return False, str(e)
 
 def commit_rollback_sync(sync_session: Session):
     '''

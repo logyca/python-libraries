@@ -1,7 +1,7 @@
 from logyca_ai.utils.constants.content import ContentRole
 from logyca_ai.utils.schemes.input.conversations import Content, ImageFileMessage, PdfFileMessage, PlainTextFileMessage, MicrosoftFileMessage
 from logyca_ai.utils.schemes.output.conversations import ConversationAnswer, ConversationUsage
-from openai import AsyncAzureOpenAI, AzureOpenAI
+from openai import AsyncAzureOpenAI, AzureOpenAI, RateLimitError, APIError
 from openai.types.completion_usage import CompletionUsage
 from starlette import status as http_status
 
@@ -149,8 +149,14 @@ class AzureOpenAIChatGPT():
             usage:CompletionUsage = completion.usage
             conversation_response = ConversationAnswer()
             conversation_response.assistant = str(response['choices'][0]['message']['content']).strip()
+            if conversation_response.assistant == 'None':
+                return http_status.HTTP_429_TOO_MANY_REQUESTS,"Too many requests"
             conversation_response.usage_data = ConversationUsage(**usage.__dict__)
             return http_status.HTTP_200_OK,conversation_response
+        except APIError as e:
+            return http_status.HTTP_429_TOO_MANY_REQUESTS,str(e)
+        except RateLimitError as e:
+            return http_status.HTTP_429_TOO_MANY_REQUESTS,str(e)
         except Exception as e:
             return http_status.HTTP_429_TOO_MANY_REQUESTS,str(e)
 
@@ -183,8 +189,14 @@ class AzureOpenAIChatGPT():
             usage:CompletionUsage = completion.usage
             conversation_response = ConversationAnswer()
             conversation_response.assistant = str(response['choices'][0]['message']['content']).strip()
+            if conversation_response.assistant == 'None':
+                return http_status.HTTP_429_TOO_MANY_REQUESTS,"Too many requests"
             conversation_response.usage_data = ConversationUsage(**usage.__dict__)
             return http_status.HTTP_200_OK,conversation_response
+        except APIError as e:
+            return http_status.HTTP_429_TOO_MANY_REQUESTS,str(e)
+        except RateLimitError as e:
+            return http_status.HTTP_429_TOO_MANY_REQUESTS,str(e)
         except Exception as e:
             return http_status.HTTP_429_TOO_MANY_REQUESTS,str(e)
 

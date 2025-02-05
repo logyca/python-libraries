@@ -26,13 +26,13 @@ The connection pool (pool_size) after the first query will remain open until the
 @app.get("/simulated_query_async/")
 async def read_item(async_session:AsyncSession = Depends(conn_async_session)):
     try:
-        status, date_time_check_conn = await check_connection_async(async_session)
+        status, date_time_or_exception_error = await check_connection_async(async_session)
         if(status):
             query = text_to_sql("SELECT now();")
             result = await async_session.execute(query)
             simulated_query = result.scalar_one_or_none()
             await commit_rollback_async(async_session)
-            return {"date_time_check_conn": date_time_check_conn, "simulated_query": simulated_query}
+            return {"date_time_or_exception_error": date_time_or_exception_error, "simulated_query": simulated_query}
         else:
             raise HTTPException(status_code=404, detail="async_session connect db error...")
     except Exception as e:

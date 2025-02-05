@@ -178,7 +178,7 @@ class AsyncConnEngine(metaclass=Singleton):
 
 async def check_connection_async(async_session: AsyncSession)->tuple[bool,str]:
     '''Description
-    :return tuple[bool,str]: status, date_time now'''    
+    :return tuple[bool,str]: status, date_time_or_exception_error'''    
     try:
         query = text_to_sql(f"SELECT now();")
         result:CursorResult = await async_session.execute(query)
@@ -188,7 +188,7 @@ async def check_connection_async(async_session: AsyncSession)->tuple[bool,str]:
         else:
            return False, ''
     except Exception as e:
-        return False, str
+        return False, str(e)
 
 async def commit_rollback_async(async_session: AsyncSession):
     try:

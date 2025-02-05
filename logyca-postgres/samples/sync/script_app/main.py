@@ -21,13 +21,13 @@ The connection pool (pool_size) after the first query will remain open until the
 '''
 
 def methods(sync_session: Session):
-    status, date_time_check_conn = check_connection_sync(sync_session)
+    status, date_time_or_exception_error = check_connection_sync(sync_session)
     if(status):
         query = text_to_sql("SELECT now();")
         result = sync_session.execute(query)
         simulated_query = result.fetchone()[0]
         commit_rollback_sync(sync_session)
-        print(f"date_time_check_conn={date_time_check_conn},simulated_query={simulated_query}")
+        print(f"date_time_or_exception_error={date_time_or_exception_error},simulated_query={simulated_query}")
     else:
         print("sync_session connect db error...")
 def main():

@@ -60,12 +60,16 @@ def extract_text_from_docx_file(filename_full_path:str|BytesIO,advanced_image_re
     if advanced_image_recognition:
         for rel in doc.part.rels.values():
             if "image" in rel.target_ref:
-                image_part = rel.target_part
-                image_bytes = image_part.image.blob
+                try:
+                    image_part = rel.target_part
+                    image_bytes = image_part.blob
 
-                image = Image.open(BytesIO(image_bytes))
-                ocr_text = pytesseract.image_to_string(image)
-                text += ocr_text
+                    image = Image.open(BytesIO(image_bytes))
+                    ocr_text = pytesseract.image_to_string(image)
+                    text += ocr_text
+                except:
+                    """If the image format is not supported, the image will be skipped."""
+                    pass
 
     return text
 
@@ -89,21 +93,25 @@ def extract_images_from_docx_file(filename_full_path:str|BytesIO)->list:
 
     for rel in doc.part.rels.values():
         if "image" in rel.target_ref:
-            image_part = rel.target_part
-            image_bytes = image_part.image.blob
+            try:
+                image_part = rel.target_part
+                image_bytes = image_part.blob
 
-            img = Image.open(BytesIO(image_bytes))
-            image_format = img.format if img.format else "PNG"
-            image_format = str(image_format).lower()
-            buffered = BytesIO()
-            img.save(buffered, format=image_format)
-            image_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
-            images.append(ImageBase64(
-                image_base64=image_base64,
-                image_format=image_format
-                ).to_dict()
-            )
-            del buffered
+                img = Image.open(BytesIO(image_bytes))
+                image_format = img.format if img.format else "PNG"
+                image_format = str(image_format).lower()
+                buffered = BytesIO()
+                img.save(buffered, format=image_format)
+                image_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
+                images.append(ImageBase64(
+                    image_base64=image_base64,
+                    image_format=image_format
+                    ).to_dict()
+                )
+                del buffered
+            except:
+                """If the image format is not supported, the image will be skipped."""
+                pass
 
     return images
 
@@ -164,11 +172,14 @@ def extract_text_from_excel_file(filename_full_path: str|BytesIO, advanced_image
             text = ""
             if advanced_image_recognition:
                 for image in sheet._images:
-                    img = Image.open(BytesIO(image._data()))
-                    ocr_text = pytesseract.image_to_string(img)
-                    text += ocr_text
-
-                    text += "\n"
+                    try:
+                        img = Image.open(BytesIO(image._data()))
+                        ocr_text = pytesseract.image_to_string(img)
+                        text += ocr_text
+                        text += "\n"
+                    except:
+                        """If the image format is not supported, the image will be skipped."""
+                        pass                    
             result[sheet_name] = {
                 "image_text": text
             }
@@ -244,19 +255,23 @@ def extract_images_excel_file(filename_full_path: str|BytesIO,only_sheet_visibil
         
         if make_extraction is True:
             for image in sheet._images:
-                img = Image.open(BytesIO(image._data()))
-                image_format = img.format if img.format else "PNG"
-                image_format = str(image_format).lower()
-                buffered = BytesIO()
-                img.save(buffered, format=image_format)
-                image_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
-                images.append(ImageBase64(
-                    image_base64=image_base64,
-                    image_format=image_format,
-                    sheet_name=sheet_name
-                    ).to_dict()
-                )
-                del buffered
+                try:
+                    img = Image.open(BytesIO(image._data()))
+                    image_format = img.format if img.format else "PNG"
+                    image_format = str(image_format).lower()
+                    buffered = BytesIO()
+                    img.save(buffered, format=image_format)
+                    image_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
+                    images.append(ImageBase64(
+                        image_base64=image_base64,
+                        image_format=image_format,
+                        sheet_name=sheet_name
+                        ).to_dict()
+                    )
+                    del buffered
+                except:
+                    """If the image format is not supported, the image will be skipped."""
+                    pass
         del sheet
     del workbook
 

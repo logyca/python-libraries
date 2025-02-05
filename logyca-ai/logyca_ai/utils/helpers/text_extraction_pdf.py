@@ -63,20 +63,23 @@ def extract_text_from_pdf_file(filename_full_path:str|BytesIO,advanced_image_rec
         if advanced_image_recognition:
             image_list = page.get_images(full=True)
             for img_index, img in enumerate(image_list):
-                xref = img[0]
-                base_image = doc.extract_image(xref)
-                image_bytes = base_image["image"]
+                try:
+                    xref = img[0]
+                    base_image = doc.extract_image(xref)
+                    image_bytes = base_image["image"]
 
-                image_path = os.path.join(output_temp_dir, f"image_{page_num+1}_{img_index+1}.png")
-                with open(image_path, "wb") as img_file:
-                    img_file.write(image_bytes)
+                    image_path = os.path.join(output_temp_dir, f"image_{page_num+1}_{img_index+1}.png")
+                    with open(image_path, "wb") as img_file:
+                        img_file.write(image_bytes)
 
-                image = Image.open(image_path)
-                ocr_text = pytesseract.image_to_string(image)
-                text += ocr_text
+                    image = Image.open(image_path)
+                    ocr_text = pytesseract.image_to_string(image)
+                    text += ocr_text
 
-                os.remove(image_path)
-
+                    os.remove(image_path)
+                except:
+                    """If the image format is not supported, the image will be skipped."""
+                    pass
     doc.close()
     return text
 
@@ -112,16 +115,20 @@ def extract_images_from_pdf_file(filename_full_path:str|BytesIO)->list:
 
         image_list = page.get_images(full=True)
         for img_index, img in enumerate(image_list):
-            xref = img[0]
-            base_image = doc.extract_image(xref)
-            image_bytes = base_image["image"]
-            image_format = base_image["ext"]
-            image_base64 = base64.b64encode(image_bytes).decode("utf-8")
-            images.append(ImageBase64(
-                image_base64=image_base64,
-                image_format=image_format
-                ).to_dict()
-            )
+            try:
+                xref = img[0]
+                base_image = doc.extract_image(xref)
+                image_bytes = base_image["image"]
+                image_format = base_image["ext"]
+                image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+                images.append(ImageBase64(
+                    image_base64=image_base64,
+                    image_format=image_format
+                    ).to_dict()
+                )
+            except:
+                """If the image format is not supported, the image will be skipped."""
+                pass
 
     doc.close()
     return images

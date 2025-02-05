@@ -366,5 +366,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Improve prompt engineer for data extraction in Excel, specifying the JSON spreadsheet format used in data extraction.
 
+## [0.2.9] - 2025-02-05
+### Fixed
+- When extracting images from PDF and Microsoft docx,xlsx documents, there are unsupported image formats such as WMF, these images are skipped.
+
+## [0.2.10] - 2025-02-05
+### Fixed
+- Due to so many restrictions on the part of openai, due to the rate limits, a message is created to return the request http error status_code 429 for this reason.
+
 
 
