@@ -171,3 +171,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Two filter sa container blob list are added. modified hours ago to return modified blobs after x hours and include_subfolders to return only blobs from the received folder list.
 
+## [0.1.3] - 2025-09-26
+### Changed
+- A new parameter is added when downloading a file to rename it on the fly on disk to the following function: container_blob_download_data_transfer_options
+

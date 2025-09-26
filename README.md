@@ -1,7 +1,8 @@
 # References
 
-https://packaging.python.org/en/latest/tutorials/packaging-projects/
-https://python-poetry.org/docs/pyproject/
+- [tutorials packaging-projects](https://packaging.python.org/en/latest/tutorials/packaging-projects/)
+- [poetry](https://python-poetry.org/docs/pyproject/)
+- [toml - pep-0639](https://peps.python.org/pep-0639/)
 
 # Select library to upload or update
 
@@ -58,11 +59,8 @@ python -m pip install pipenv
 python -m pipenv shell
 
 # Build tool
-pip install --upgrade setuptools build
-
-# Publish to pypi/Azure DevOps Artifacts tool
-pip install --upgrade twine
-
+python -m pip install --upgrade pip
+python -m pip install --upgrade build setuptools wheel twine requests urllib3 certifi
 ```
 
 # Build + Publish in https://pypi.org
@@ -70,10 +68,13 @@ pip install --upgrade twine
 ```console
 # be located in the library folder
 cd folder/
-# then run this in the same folder where setup.py is located.    
+# then run this in the same folder where setup.py is located.
+Remove-Item dist/ -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item *.egg-info/ -Recurse -Force -ErrorAction SilentlyContinue
 python -m build
+twine check dist/*
 # Upload to PyPI Production
-twine upload dist/* --config-file ../.pypirc --verbose --repository pypi
+twine upload dist/* --config-file ../.pypirc --verbose --skip-existing --repository pypi
 ```
 
 For testing

@@ -510,7 +510,7 @@ class AzureStorageAccountBlobManagement:
         except Exception as e:
             return str(e)
 
-    def container_blob_download_data_transfer_options(self,folder_local_full_path:str,file_to_download:str,container_name:str,container_folders:list[str]=[],max_concurrency:int=2,verify_file_integrity:bool=False)->bool|str:
+    def container_blob_download_data_transfer_options(self,folder_local_full_path:str,file_to_download:str,container_name:str,container_folders:list[str]=[],max_concurrency:int=2,verify_file_integrity:bool=False,file_new_name:str|None = None)->bool|str:
         '''Description
         You can set configuration options when instantiating a client to optimize performance for data transfer operations.
         This function use the md5 checksum of the file content to verify the integrity of the downloaded blob content.
@@ -521,6 +521,7 @@ class AzureStorageAccountBlobManagement:
         :param container_folders:list[str]  : Subfolders to upload files to the container. Default root container.
         :param max_concurrency:int          : This argument defines the maximum number of parallel connections to use when the blob size exceeds 64 MiB.
         :param verify_file_integrity:bool   : Enable checksum verification with content_md5
+        :param file_new_name:str|None       : Rename the file before downloading it
         :return bool|str                    : True if Ok, otherwise string message exception.
 
         ## Examples
@@ -576,7 +577,10 @@ class AzureStorageAccountBlobManagement:
         try:
             container_name=str(container_name)
             path_blob = "/".join(container_folders + [file_to_download])
-            path_file=os.path.join(folder_local_full_path,file_to_download)
+            if file_new_name is None:
+                path_file=os.path.join(folder_local_full_path,file_to_download)
+            else:
+                path_file=os.path.join(folder_local_full_path,file_new_name)
             blob_client = BlobClient(
                 account_url=self.__account_url, 
                 container_name=container_name,
@@ -589,7 +593,7 @@ class AzureStorageAccountBlobManagement:
                 download_stream = blob_client.download_blob(max_concurrency=max_concurrency)
                 download_stream.readinto(data)
 
-            verify_file_integrity = self.checksum_compare_local_file_versus_remote_content_md5(folder_local_full_path,file_to_download,container_name,container_folders)
+            verify_file_integrity = self.checksum_compare_local_file_versus_remote_content_md5(folder_local_full_path,file_to_download,container_name,container_folders,file_new_name=file_new_name)
             if verify_file_integrity is True:
                 return True
             else:
@@ -820,7 +824,7 @@ class AzureStorageAccountBlobManagement:
         except Exception as e:
             return False
 
-    def checksum_compare_local_file_versus_remote_content_md5(self,folder_local_full_path:str,file:str,container_name:str,container_folders:list[str]=[])->bool|str|bytearray:
+    def checksum_compare_local_file_versus_remote_content_md5(self,folder_local_full_path:str,file:str,container_name:str,container_folders:list[str]=[],file_new_name:str|None = None)->bool|str|bytearray:
         '''Description
         Compare checksum md5 hash of a local file against the cotent_md5 blob properties.
         Compares the local size of the file and the blob, ensuring that if locally it is greater than 0 bytes, the remote one is also greater than 0 bytes.
@@ -829,6 +833,7 @@ class AzureStorageAccountBlobManagement:
         :param file:str                     : File name with extention to compare.
         :param container_name:str           : Container name.
         :param container_folders:list[str]  : Subfolders to upload files to the container. Default root container.
+        :param file_new_name:str|None       : This is the new name of file, if the file has been renamed.
         :return bool|str                    : True if Ok, otherwise string message exception.
 
         ## Example
@@ -862,8 +867,13 @@ class AzureStorageAccountBlobManagement:
         '''
         try:
             container_name=str(container_name)
-            path_blob = "/".join(container_folders + [file])
-            path_file=os.path.join(folder_local_full_path,file)
+            path_blob = "/".join(container_folders + [file])            
+
+            if file_new_name is None:
+                path_file=os.path.join(folder_local_full_path,file)
+            else:
+                path_file=os.path.join(folder_local_full_path,file_new_name)
+
             local_content_md5=self.checksum_get_local_content_md5(path_file)
             container_client = self.__service_client_conn.get_container_client(container_name)
             blob_client = container_client.get_blob_client(path_blob)

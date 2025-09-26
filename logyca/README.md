@@ -41,6 +41,13 @@
 
 ---
 
+# List of other packages supported by Logyca:
+
+  - [logyca-pagination](https://pypi.org/project/logyca-pagination/): To according to a query created with sqlalchemy, paginate its result and return the information in lists of items with page numbers that can be used in frontend grids.
+  - [logyca-ai](https://pypi.org/project/logyca-ai/): To interact with ChatGPT and analyze documents, files and other functionality of the OpenAI library.
+  - [logyca-postgres](https://pypi.org/project/logyca-postgres/): Standard methods to connect to postgres.
+  - [logyca-azure-storage-blob](https://pypi.org/project/logyca-azure-storage-blob/): To interact with the blob container files in your Azure Storage account.
+
 ---
 
 # "pip install" dependency check
