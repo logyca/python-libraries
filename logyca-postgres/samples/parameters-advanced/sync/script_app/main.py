@@ -27,6 +27,7 @@ class SyncConnEngineAdvancedParameters(SyncConnEngine):
         kwargs = {
             "url": url_connection,
             "echo":False,
+            "future":True,
             "connect_args":{
                 "application_name": server_settings["application_name"],
             },
