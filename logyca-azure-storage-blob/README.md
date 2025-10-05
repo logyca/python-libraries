@@ -175,3 +175,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - A new parameter is added when downloading a file to rename it on the fly on disk to the following function: container_blob_download_data_transfer_options
 
+## [0.1.4] - 2025-10-05
+### Fixed
+- Adjustment in the container_create function when selecting the type of container to create, public, container, etc.
+

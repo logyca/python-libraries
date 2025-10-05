@@ -9,3 +9,15 @@ if status is True:
 else:
     print(status)
 
+status=asabm.container_delete(App.AzureStorageAccount.Containers.NAME_PUBLIC_TO_CREATE_DELETE)
+if status is True:
+    print("Contenedor {} borrado...".format(App.AzureStorageAccount.Containers.NAME_PUBLIC_TO_CREATE_DELETE))
+else:
+    print(status)
+
+status=asabm.container_delete(App.AzureStorageAccount.Containers.NAME_WITH_DATA)
+if status is True:
+    print("Contenedor {} borrado...".format(App.AzureStorageAccount.Containers.NAME_WITH_DATA))
+else:
+    print(status)
+

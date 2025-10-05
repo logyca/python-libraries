@@ -8,3 +8,15 @@ if status is True:
     print("Contenedor {} creado...".format(App.AzureStorageAccount.Containers.NAME_TO_CREATE_DELETE))
 else:
     print(status)
+
+status=asabm.container_create(App.AzureStorageAccount.Containers.NAME_WITH_DATA)
+if status is True:
+    print("Contenedor {} creado...".format(App.AzureStorageAccount.Containers.NAME_WITH_DATA))
+else:
+    print(status)
+
+status=asabm.container_create(App.AzureStorageAccount.Containers.NAME_PUBLIC_TO_CREATE_DELETE,"blob")
+if status is True:
+    print("Contenedor {} creado...".format(App.AzureStorageAccount.Containers.NAME_PUBLIC_TO_CREATE_DELETE))
+else:
+    print(status)

@@ -14,8 +14,8 @@ asabm=AzureStorageAccountBlobManagement(SetCredentialsConnectionString(connectio
 # blob_list=asabm.container_blob_list(App.AzureStorageAccount.Containers.NAME_WITH_DATA,container_folders=container_folders)
 #################
 # modified_hours_ago
-container="fecha1"
-container_folders=["other"]
+container=App.AzureStorageAccount.Containers.NAME_WITH_DATA
+container_folders=["folder1","folder1"]
 blob_list=asabm.container_blob_list(container,container_folders=container_folders,include_subfolders=False,modified_minutes_ago=2)
 for blob in blob_list:
     blob_properties:BlobProperties = blob

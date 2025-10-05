@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "logyca-azure-storage-blob"
-version = "0.1.3"
+version = "0.1.4"
 description = "An integration package created by the company LOGYCA to interact with the blob container files in your Azure Storage account."
 readme = "README.md"
 license-files = ["LICEN{CSE*"]

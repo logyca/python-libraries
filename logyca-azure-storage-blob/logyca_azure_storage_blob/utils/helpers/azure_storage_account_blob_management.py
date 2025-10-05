@@ -1,4 +1,8 @@
 from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError
+from datetime import datetime, timedelta, timezone
+from enum import StrEnum
+from typing import Literal
+import datetime, hashlib, json, math, os, re, time, uuid
 from azure.storage.blob import (
     BlobBlock,
     BlobClient,
@@ -8,10 +12,8 @@ from azure.storage.blob import (
     BlobServiceClient,
     ContentSettings,
     generate_blob_sas,
+    PublicAccess,
     )
-from datetime import datetime, timedelta, timezone
-from enum import StrEnum
-import datetime, hashlib, json, math, os, re, time, uuid
 
 class SetCredentialsNameKey:
     '''
@@ -43,6 +45,7 @@ class AzureStorageAccountBlobManagementErrorCode(StrEnum):
 
 class AzureStorageAccountBlobManagement:
     '''Description
+
     Library with functionalities similar to azcopy where the content_md5 checksum is used to validate the integrity of the file uploaded or downloaded to the blob service.
     
     ## Azcopy command example
@@ -84,6 +87,7 @@ class AzureStorageAccountBlobManagement:
 
     def get_connect_status(self):
         '''Description
+
         :return bool: True if exist attribute sku_name in account_information, otherwise return False due to connection failure to the storage account
 
         ## Examples
@@ -107,6 +111,7 @@ class AzureStorageAccountBlobManagement:
 
     def get_account_information(self):
         '''Description
+
         :return list: list of account information
 
         ## Examples
@@ -127,6 +132,7 @@ class AzureStorageAccountBlobManagement:
 
     def container_list(self):
         '''Description
+
         :return list: A list of full data of containers according to the given credentials
         '''
         list_containers=[]
@@ -135,11 +141,12 @@ class AzureStorageAccountBlobManagement:
             for container in containers:
                 list_containers.append(container)
         except Exception as e:
-            list_containers
+            return list_containers
         return list_containers
 
     def container_list_name(self):
         '''Description
+
         :return list: A list names of containers according to the given credentials
         '''
         list_containers=[]
@@ -148,13 +155,20 @@ class AzureStorageAccountBlobManagement:
             for container in containers:
                 list_containers.append(container.name)
         except Exception as e:
-            pass
+            return list_containers
         return list_containers
 
-    def container_create(self,name:str,public_access:str=None)->bool|str:
+    def container_create(self,name:str,
+                         public_access:Literal[
+                                PublicAccess.BLOB,
+                                PublicAccess.CONTAINER,
+                                PublicAccess.OFF,
+                             ] | None = None
+                         )->bool|str:
         '''Description
+
         :param name:str         : Name of new container.
-        :param public_access:str: Possible values None,container,blob.
+        :param public_access:str: Possible values None,container,blob. Default value None for private access.
         :return bool|str        : True if Ok, otherwise string message exception.
 
         ## Example
@@ -162,7 +176,9 @@ class AzureStorageAccountBlobManagement:
         from logyca_azure_storage_blob import AzureStorageAccountBlobManagement, SetCredentialsConnectionString
 
         asabm=AzureStorageAccountBlobManagement(SetCredentialsConnectionString(connection_string=""))
+
         status=asabm.container_create("name")
+        # status=asabm.container_create("name","blob") # for public access
         if status is True:
             print("ok...")
         else:
@@ -171,15 +187,20 @@ class AzureStorageAccountBlobManagement:
         '''
         status=True
         try:
-            self.__service_client_conn.create_container(str(name),public_access)
+            if isinstance(public_access,str): public_access = public_access.lower()
+            allowed_values = [str(pa.value) for pa in PublicAccess]+[None]
+            if public_access not in allowed_values:
+                return f"Not allowed value, allowed values ​​are: {allowed_values}"
+            self.__service_client_conn.create_container(name=str(name),public_access=public_access)
         except ResourceExistsError as ex:
-            status=True
+            status=str(ex)
         except Exception as e:
-            status=e
+            status=str(e)
         return status
 
     def container_delete(self,name:str)->bool|str:
         '''Description
+
         :param name:str     : Name of new container.
         :return bool|str    : True if Ok, otherwise string message exception.
 
@@ -199,9 +220,9 @@ class AzureStorageAccountBlobManagement:
         try:
             self.__service_client_conn.delete_container(str(name))
         except ResourceNotFoundError as ex:
-            status=True
+            status=str(ex)
         except Exception as e:
-            status=e
+            status=str(e)
         return status
 
     #############################################
@@ -209,6 +230,7 @@ class AzureStorageAccountBlobManagement:
 
     def container_blob_list(self,container_name:str,container_folders:list[str]=[],include_subfolders:bool=True,modified_minutes_ago:int=None)->list[BlobProperties]:
         '''Description
+
         Lists the files in a container and its subfolders, returning their properties.
         :param container_name:str       : Name of container.
         :param include_subfolders:bool  : Return results from subfolders or only in the defined folder. 
@@ -273,6 +295,7 @@ class AzureStorageAccountBlobManagement:
 
     def container_blob_properties(self,blob_file:str,container_name:str,container_folders:list[str]=[])->BlobProperties|str:
         '''Description
+
         :param blob_file:str                : Blob name with extention to get the info.
         :param container_name:str           : Name of container.
         :param container_folders:list[str]  : Subfolders where the blob file is located. Default root container.
@@ -329,6 +352,7 @@ class AzureStorageAccountBlobManagement:
 
     def container_blob_upload_staging_blocks_commit(self,folder_local_full_path:str,file_to_upload:str,container_name:str,container_folders:list[str]=[],verify_file_integrity:bool=False,print_charge_percentage:bool=False)->bool|str:
         '''Description
+
         upload the file using block preparation and commit, and use the md5 checksum of the file content to verify the integrity of the uploaded blob content.
         This function allows you to limit the ram memory used by reading in chunks but not the network connections to be used to improve the upload speed.
         It can show the status progress.
@@ -425,6 +449,7 @@ class AzureStorageAccountBlobManagement:
 
     def container_blob_upload_data_transfer_options(self,folder_local_full_path:str,file_to_upload:str,container_name:str,container_folders:list[str]=[],max_concurrency:int=2,verify_file_integrity:bool=False)->bool|str:
         '''Description
+
         Upload file using multiple network upload connections, and use the md5 checksum of the file content to verify the integrity of the uploaded blob content..
         This function allows you to limit the ram memory used by reading in chunks and the network connections to be used to improve the upload speed.
         
@@ -512,6 +537,7 @@ class AzureStorageAccountBlobManagement:
 
     def container_blob_download_data_transfer_options(self,folder_local_full_path:str,file_to_download:str,container_name:str,container_folders:list[str]=[],max_concurrency:int=2,verify_file_integrity:bool=False,file_new_name:str|None = None)->bool|str:
         '''Description
+
         You can set configuration options when instantiating a client to optimize performance for data transfer operations.
         This function use the md5 checksum of the file content to verify the integrity of the downloaded blob content.
         
@@ -603,6 +629,7 @@ class AzureStorageAccountBlobManagement:
 
     def container_blob_delete(self,file_to_delete:str,container_name:str,container_folders:list[str]=[])->bool|str:
         '''Description
+
         :param file_to_delete:str           : File name with extention to delete.
         :param container_name:str           : Container name.
         :param container_folders:list[str]  : Subfolders to upload files to the container. Default root container.
@@ -655,6 +682,7 @@ class AzureStorageAccountBlobManagement:
 
     def container_blob_get_url_sas_read_to_download(self,file_to_download:str,container_name:str,container_folders:list[str]=[],expiry_days:int=1)->bool|str:
         '''Description
+
         You can set configuration options when instantiating a client to optimize performance for data transfer operations.
         
         :param file_to_download:str         : File name with extention to download.
@@ -701,6 +729,7 @@ class AzureStorageAccountBlobManagement:
 
     def container_blob_upload_logging(self,container_name:str,logging_level:LoggingLevels,preffix_name:str,message:str,prefix_within_the_message:str='',container_folders:list[str]=[])->bool|str:
         '''Description
+
         Use this method to write messages to the end of a blob file.
         :param container_name:str               : Container name.
         :param logging_level:LoggingLevels      : Suffix for name: logging_level to name the file, example for info would be: "info.log".
@@ -765,6 +794,7 @@ class AzureStorageAccountBlobManagement:
 
     def container_blob_read_logging_latest_changes(self,container_name:str,file_log:str,container_folders:list[str]=[],seconds_refresh:int=3)->bool|str:
         '''Description
+
         Execute this method in the console or terminal, the content of the file will begin to print until the last line, where changes are monitored.
         It works similar to how it works in the linux tail -1 console, where the latest changes to the file are printed.
 
@@ -807,6 +837,7 @@ class AzureStorageAccountBlobManagement:
 
     def checksum_get_local_content_md5(self,full_path_file:str,is_string:bool=True)->bool|str|bytearray:
         '''Description
+
         :full_path_file:str         : Full disk path to file.
         :is_string:bool             : If True hexadecimal representation of the file checksum, if False bytearray.
         :return bool|str|bytearray  : False if there is an error, otherwise checksum of file.
@@ -826,6 +857,7 @@ class AzureStorageAccountBlobManagement:
 
     def checksum_compare_local_file_versus_remote_content_md5(self,folder_local_full_path:str,file:str,container_name:str,container_folders:list[str]=[],file_new_name:str|None = None)->bool|str|bytearray:
         '''Description
+
         Compare checksum md5 hash of a local file against the cotent_md5 blob properties.
         Compares the local size of the file and the blob, ensuring that if locally it is greater than 0 bytes, the remote one is also greater than 0 bytes.
         
