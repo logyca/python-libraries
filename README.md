@@ -75,6 +75,8 @@ python -m build
 twine check dist/*
 # Upload to PyPI Production
 twine upload dist/* --config-file ../.pypirc --verbose --skip-existing --repository pypi
+Remove-Item dist/ -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item *.egg-info/ -Recurse -Force -ErrorAction SilentlyContinue
 ```
 
 For testing

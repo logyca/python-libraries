@@ -179,3 +179,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Adjustment in the container_create function when selecting the type of container to create, public, container, etc.
 
+## [0.1.5] - 2025-10-05
+### Fixed
+- Correction of error messages when handling existing containers or containers with different states.
+

@@ -1,4 +1,4 @@
-from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError
+from azure.core.exceptions import ResourceNotFoundError, HttpResponseError
 from datetime import datetime, timedelta, timezone
 from enum import StrEnum
 from typing import Literal
@@ -159,12 +159,13 @@ class AzureStorageAccountBlobManagement:
         return list_containers
 
     def container_create(self,name:str,
-                         public_access:Literal[
-                                PublicAccess.BLOB,
-                                PublicAccess.CONTAINER,
-                                PublicAccess.OFF,
-                             ] | None = None
-                         )->bool|str:
+                public_access:Literal[
+                    PublicAccess.BLOB,
+                    PublicAccess.CONTAINER,
+                    PublicAccess.OFF,
+                ] | None = None,
+                ignore_if_exists: bool = True
+            )->bool|str:
         '''Description
 
         :param name:str         : Name of new container.
@@ -187,13 +188,22 @@ class AzureStorageAccountBlobManagement:
         '''
         status=True
         try:
+            name=str(name)
             if isinstance(public_access,str): public_access = public_access.lower()
             allowed_values = [str(pa.value) for pa in PublicAccess]+[None]
             if public_access not in allowed_values:
                 return f"Not allowed value, allowed values ​​are: {allowed_values}"
-            self.__service_client_conn.create_container(name=str(name),public_access=public_access)
-        except ResourceExistsError as ex:
-            status=str(ex)
+            self.__service_client_conn.create_container(name=name,public_access=public_access)
+        except HttpResponseError as ex:
+            error_code = getattr(ex, "error_code", None)
+            match error_code:
+                case "PublicAccessNotPermitted":
+                    return f"The container {name} could not be created. Public access to this storage account is not allowed."
+                case "ContainerAlreadyExists":
+                    if ignore_if_exists:
+                        return True
+                    else:
+                        return f"The specified container {name} already exists."
         except Exception as e:
             status=str(e)
         return status

@@ -1,4 +1,4 @@
-## Python
+# Python
 
     - Version 3.11+
 
@@ -27,3 +27,6 @@ python -m pip install --upgrade pip
 pip install -r .\requirements.txt
 ```
 
+# Environment vars
+
+Copy .env.sample to .env and configure the connection strings
