@@ -8,8 +8,9 @@
             "justMyCode": false,
             "name": "Debug current file",
             "program": "${file}",
+            "python": "${workspaceFolder}\\venv\\Scripts\\python.exe",
             "request": "launch",
             "type": "debugpy"
         }
-   ]
+    ]
 }

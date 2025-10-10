@@ -10,7 +10,7 @@
         "-NoLogo",
         "-NoExit",
         "-Command",
-        "Set-Location -Path '${workspaceFolder}' ; ",
+        "Set-Location -Path ''${workspaceFolder}'' ; ",
         "$python_bin = ''C:\\python\\python313\\python.exe'' ; Write-Host python_bin = $python_bin ;",
         "& $python_bin -m pip install --upgrade pip ; ",
         "& $python_bin -m pip install virtualenv --upgrade ; ",

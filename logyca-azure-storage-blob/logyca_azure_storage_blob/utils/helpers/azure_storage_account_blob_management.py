@@ -2,7 +2,6 @@ from azure.core.exceptions import ResourceNotFoundError, HttpResponseError
 from datetime import datetime, timedelta, timezone
 from enum import StrEnum
 from typing import Literal
-import datetime, hashlib, json, math, os, re, time, uuid
 from azure.storage.blob import (
     BlobBlock,
     BlobClient,
@@ -14,6 +13,7 @@ from azure.storage.blob import (
     generate_blob_sas,
     PublicAccess,
     )
+import hashlib, json, math, os, re, time, uuid
 
 class SetCredentialsNameKey:
     '''
@@ -279,7 +279,7 @@ class AzureStorageAccountBlobManagement:
             if include_subfolders is True and modified_minutes_ago is None:
                 return blob_list
             else:
-                now = datetime.datetime.now(timezone.utc)
+                now = datetime.now(timezone.utc)
                 blob_filter_list=[]
                 for blob in blob_list:
                     if isinstance(blob, BlobPrefix):
@@ -719,8 +719,8 @@ class AzureStorageAccountBlobManagement:
             container_client = self.__service_client_conn.get_container_client(container_name)
             blob_client = container_client.get_blob_client(path_blob)            
             if blob_client.exists():
-                start_time = datetime.datetime.now(datetime.timezone.utc)
-                expiry_time = start_time + datetime.timedelta(days=expiry_days)
+                start_time = datetime.now(timezone.utc)
+                expiry_time = start_time + timedelta(days=expiry_days)
                 sas_token = generate_blob_sas(
                     account_name=self.__account_name,
                     container_name=container_name,
@@ -938,5 +938,164 @@ class AzureStorageAccountBlobManagement:
                         return blob_properties
                 else:
                     return AzureStorageAccountBlobManagementErrorCode.CHECKSUM_CONTENT_MD5_VERSUS_NOT_MATCH
+        except Exception as e:
+            return str(e)
+
+    def container_blob_delete_by_age(
+        self,
+        container_name: str,
+        older_than_unit: Literal["seconds", "minutes", "hours", "days", "weeks"],
+        older_than: int,
+        container_folders: list[str] = [],
+        include_subfolders: bool = True,
+        preview_only: bool = True,
+    ) -> dict | str:
+        """
+        Deletes blobs (files only, not folders) from a container based on their last modification date.
+
+        :param container_name: 
+            Name of the container where the blobs are located.
+
+        :param older_than_unit: 
+            Time unit to interpret `older_than`. 
+            Accepted values: "seconds", "minutes", "hours", "days", "weeks".
+
+        :param older_than: 
+            Numeric value that represents the age threshold according to `older_than_unit`. 
+            Example: if `older_than=3` and `older_than_unit="days"`, 
+            blobs modified more than 3 days ago will be deleted (or listed in preview mode).
+
+        :param container_folders: 
+            Starting path inside the container. 
+            Use an empty list `[]` for the root, or a list like `["folder1", "subfolder2"]` 
+            to target a specific subdirectory.
+
+        :param include_subfolders: 
+            If True, the method will scan recursively all subfolders under `container_folders`.  
+            If False, only blobs directly under the specified folder will be considered.
+
+        :param preview_only: 
+            If True, the method will not delete blobs but will return a preview list 
+            of which blobs would be deleted.  
+            If False, matching blobs will actually be deleted.
+
+        :return: 
+            A dictionary containing a summary (container name, total scanned, total deleted, 
+            and cutoff datetime) and a list of affected blobs,  
+            or a string with an error message in case of failure.
+
+        ## Example
+        ```python
+        from logyca_azure_storage_blob import AzureStorageAccountBlobManagement, SetCredentialsConnectionString
+        import json
+
+        asabm=AzureStorageAccountBlobManagement(SetCredentialsConnectionString(connection_string="DefaultEndpointsProtocol=https;AccountName=***"))
+
+        # 1) Delete all by date searching from the root of the container (if preview_only=true it does not delete)
+        res = asabm.container_blob_delete_by_age(
+            container_name="tmp",
+            older_than_unit="hours",
+            older_than=7,
+            container_folders=[],
+            include_subfolders=True,
+            preview_only=True
+        )
+        if isinstance(res,dict):
+            print(f"deleted files={res.get("deleted",None)}")
+            print(f"details={json.dumps(res,indent=4)}")
+        else:
+            print(f"Error: {res}")
+
+        # 2) Delete only in /folder1/folder2/ (without entering subfolders)
+        res = asabm.container_blob_delete_by_age(
+            container_name="tmp",
+            older_than_unit="weeks",
+            older_than=2,
+            container_folders=["folder1","folder2"],
+            include_subfolders=False,
+            preview_only=True
+        )
+        if isinstance(res,dict):
+            print(f"deleted files={res.get("deleted",None)}")
+            print(f"details={json.dumps(res,indent=4)}")
+        else:
+            print(f"Error: {res}")
+
+        ```
+        """
+        try:
+            match older_than_unit:
+                case "seconds":
+                    older_than = timedelta(seconds=int(older_than))
+                case "minutes":
+                    older_than = timedelta(minutes=int(older_than))
+                case "hours": 
+                    older_than = timedelta(hours=int(older_than))
+                case "days": 
+                    older_than = timedelta(days=int(older_than))
+                case "weeks":
+                    older_than = timedelta(weeks=int(older_than))
+                case _:
+                    return 'Unrecognized unit for older_than unit, supported values: ["seconds", "minutes", "hours", "days", "weeks"]'
+
+            now = datetime.now(timezone.utc)
+            time_diff = now - older_than
+
+            container_name = str(container_name)
+            container_client = self.__service_client_conn.get_container_client(container_name)
+
+            base_prefix = "/".join(container_folders).strip("/")
+            name_starts_with = "" if base_prefix == "" else base_prefix + "/"
+
+            base_depth = 0 if base_prefix == "" else base_prefix.count("/") + 1
+
+            affected = []
+            total_scanned = 0
+            total_deleted = 0
+
+            for item in container_client.list_blobs(name_starts_with=name_starts_with):                
+
+                if not hasattr(item, "name"):
+                    continue
+
+                if not include_subfolders:
+                    current_depth = item.name.count("/")
+                    if current_depth != base_depth:
+                        continue
+
+                last_modified = item.last_modified
+
+                if last_modified is None:
+                    try:
+                        blob_client = container_client.get_blob_client(item.name)
+                        props = blob_client.get_blob_properties()
+                        last_modified = props.last_modified
+                    except Exception:
+                        pass
+
+                if last_modified <= time_diff:
+                    affected.append({
+                        "name": item.name,
+                        "last_modified": last_modified.isoformat(),
+                        "size": getattr(item, "size", None),
+                    })
+                    total_scanned += 1
+                    if not preview_only:
+                        try:
+                            container_client.delete_blob(item.name)
+                            total_deleted += 1
+                        except Exception as ex:
+                            affected[-1]["delete_error"] = str(ex)
+
+            return {
+                "container": container_name,
+                "folder_start": "/" + base_prefix if base_prefix else "/",
+                "include_subfolders": include_subfolders,
+                "preview_only": preview_only,
+                "total_scanned": total_scanned,
+                "deleted": total_deleted if not preview_only else 0,
+                "affected": affected,
+            }
+
         except Exception as e:
             return str(e)

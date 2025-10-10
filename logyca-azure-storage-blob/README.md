@@ -183,3 +183,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Correction of error messages when handling existing containers or containers with different states.
 
+## [0.2.0] - 2025-10-05
+### Added
+- The new function container_blob_delete_by_age has been added to purge files by modification date. Possible uses include temporary files or archiving compliance.
+
