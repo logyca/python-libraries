@@ -317,3 +317,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fix check_connection_sync, check_connection_async error message
 
+## [0.1.7] - 2025-10-16
+### Changed
+- The dictionaries connect_args:dic[str,Any], engine_kwargs:dic[str,Any] are added when configuring server_settings for the engine to ensure that all existing parameters are accepted.
+- Requirements for fastapi examples are updated.
+- The script_app examples are refactored to connect to multiple databases and execute either queries or DML commands.
+

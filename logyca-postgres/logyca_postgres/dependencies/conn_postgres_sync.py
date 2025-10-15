@@ -1,131 +1,39 @@
 from logyca_postgres.utils.helpers.functions import html_escaping_special_characters
 from logyca_postgres.utils.helpers.singleton import Singleton
-from sqlalchemy import create_engine
-from sqlalchemy import text as text_to_sql
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import create_engine, text as text_to_sql
 from sqlalchemy.orm import declarative_base, DeclarativeMeta, sessionmaker
 from sqlalchemy.orm.session import Session
 from starlette.exceptions import HTTPException
 from starlette.status import HTTP_409_CONFLICT
+from typing import Any
 
 SyncDeclarativeBaseORM: DeclarativeMeta = declarative_base()
 
 class SyncConnEngine(metaclass=Singleton):
-    """Description
-    FastAPI
-    ```python
-    from fastapi import FastAPI, Depends, HTTPException
-    from logyca_postgres SyncConnEngine, commit_rollback_sync, check_connection_sync
-    from sqlalchemy.orm.session import Session
-    import os
-    from sqlalchemy import text as text_to_sql
-
-    DB_USER=os.getenv('DB_USER','postgres')
-    DB_PASS=os.getenv('DB_PASS','xxx')
-    DB_HOST=os.getenv('DB_HOST','localhost')
-    DB_PORT=os.getenv('DB_PORT',5432)
-    DB_NAME=os.getenv('DB_NAME','test')
-    ssl_enable_like_local_docker_container=False
-
-    app = FastAPI()
-
-    conn_sync_session=SyncConnEngine(
-        url_connection=SyncConnEngine.build_url_connection(user=DB_USER,password=DB_PASS,host=DB_HOST,port=DB_PORT,database=DB_NAME,ssl_enable=ssl_enable_like_local_docker_container),
-        server_settings=SyncConnEngine.server_settings(pool_size=5,max_overflow=1,pool_recycle=10800,application_name="MyApp - AsyncConnEngine")
-        )
-
-    '''
-    The connection pool (pool_size) after the first query will remain open until the application is stopped.
-    '''
-
-    @app.get("/simulated_query_sync/")
-    def read_item(sync_session:Session = Depends(conn_sync_session)):
-        try:
-            status, date_time_check_conn = check_connection_sync(sync_session)
-            if(status):
-                query = text_to_sql("SELECT now();")
-                result = sync_session.execute(query)
-                simulated_query = result.fetchone()[0]
-                commit_rollback_sync(sync_session)
-                return {"date_time_check_conn": date_time_check_conn, "simulated_query": simulated_query}
-            else:
-                raise HTTPException(status_code=404, detail="async_session connect db error...")
-        except Exception as e:
-            raise HTTPException(status_code=404, detail=f"error: {e}")
-    ```
-    Worker or script
-    ```python
-    from logyca_postgres import SyncConnEngine, commit_rollback_sync, check_connection_sync
-    from sqlalchemy import text as text_to_sql
-    from sqlalchemy.orm.session import Session
-    import os
-
-    DB_USER=os.getenv('DB_USER','postgres')
-    DB_PASS=os.getenv('DB_PASS','***')
-    DB_HOST=os.getenv('DB_HOST','localhost')
-    DB_PORT=os.getenv('DB_PORT',5432)
-    DB_NAME=os.getenv('DB_NAME','test')
-    ssl_enable_like_local_docker_container=False
-
-    conn_sync_session=SyncConnEngine(
-        url_connection=SyncConnEngine.build_url_connection(user=DB_USER,password=DB_PASS,host=DB_HOST,port=DB_PORT,database=DB_NAME,ssl_enable=ssl_enable_like_local_docker_container),
-        server_settings=SyncConnEngine.server_settings(pool_size=5,max_overflow=1,pool_recycle=10800,application_name="MyApp - SyncConnEngine")
-                )
-
-    '''
-    The connection pool (pool_size) after the first query will remain open until the application is stopped or the engine is terminated: close_engine().
-    '''
-
-    def methods(sync_session: Session):
-        status, date_time_check_conn = check_connection_sync(sync_session)
-        if(status):
-            query = text_to_sql("SELECT now();")
-            result = sync_session.execute(query)
-            simulated_query = result.fetchone()[0]
-            commit_rollback_sync(sync_session)
-            print(f"date_time_check_conn={date_time_check_conn},simulated_query={simulated_query}")
-        else:
-            print("sync_session connect db error...")
-    def main():
-        for sync_session in conn_sync_session.get_sync_session():
-            methods(sync_session)
-        conn_sync_session.close_engine()            
-
-
-    if __name__ == "__main__":
-        main()
-    ```
-    
-    # Example of concepts that use a library with a singleton pattern and connection to multiple engines with yield dependency injection
-
-    The library uses a singleton pattern "class SyncConnEngine(metaclass=Singleton):", where the class is allowed to be instantiated only once. You can create another connection to another engine but you must create an inherited class in order to create a new configuration instance.
-
-    Example:
-    class SyncConnEngineX(SyncConnEngine):
-        def __init__(self, url_connection,server_settings):
-            super().__init__(url_connection,server_settings)
-    sync_session_x=SyncConnEngineX(
-        url_connection=SyncConnEngine.build_url_connection(user=settings.DB_USER_X,password=settings.DB_PASS_X,host=settings.DB_HOST_X,port=settings.DB_PORT_X,database=settings.DB_NAME_X,ssl_enable=settings.DB_SSL_X),
-        server_settings=SyncConnEngine.server_settings(pool_size=5,max_overflow=1,pool_recycle=10800,application_name=f"{App.Settings.NAME} - SyncConnEngineX")
-        )
-
-    """
-    def __init__(self,url_connection:str,server_settings:dict):
+    def __init__(self,url_connection:str,server_settings:dict[str, Any]|None,max_app_name_len:int=62):
+        application_name = None
+        connect_args = {}
+        engine_kwargs = {}
+        if server_settings is not None:
+            if "application_name" in server_settings:
+                application_name = server_settings.pop("application_name")[:max_app_name_len]
+            if "connect_args" in server_settings:
+                connect_args = server_settings["connect_args"]
+            if application_name is not None: 
+                connect_args["application_name"] = application_name
+            if "engine_kwargs" in server_settings:
+                engine_kwargs = server_settings["engine_kwargs"]
         self.url_connection=url_connection
         self.__engine = create_engine(
             url=url_connection,
-            echo=False,
-            pool_size=server_settings["pool_size"],
-            max_overflow=server_settings["max_overflow"],
-            pool_recycle=server_settings["pool_recycle"],
-            connect_args={
-                "application_name": server_settings["application_name"],
-            },
+            connect_args=connect_args,
+            **engine_kwargs
         )
-        self.__sync_session_maker=sessionmaker(bind=self.__engine,autocommit=False,autoflush=False)
+        self.__sync_session_maker=sessionmaker(bind=self.__engine,autoflush=False)
 
     def __call__(self):
         '''Description
+
         Used by fastapi dependency injection
         '''
         sync_session=self.__sync_session_maker()
@@ -136,6 +44,7 @@ class SyncConnEngine(metaclass=Singleton):
 
     def get_sync_session(self):
         '''Description
+
         Used by console scripts
         '''
         sync_session=self.__sync_session_maker()
@@ -148,29 +57,87 @@ class SyncConnEngine(metaclass=Singleton):
         self.__engine.dispose()
 
     @classmethod
-    def server_settings(self,pool_size:int, max_overflow:int, pool_recycle:int, application_name:str) -> None:
+    def server_settings(self,
+                        application_name:str|None=None,
+                        max_overflow:int|None=None,
+                        pool_pre_ping:bool|None=None,
+                        pool_recycle:int|None=None,
+                        pool_size:int|None=None,
+                        pool_use_lifo:bool|None=None,
+                        connect_args:dict[str, Any]|None=None,
+                        engine_kwargs:dict[str, Any]|None=None,
+                        ) -> dict[str, Any]|None:
         """Descriptions
 
         Args:
-            pool_size (int): Postgres server or engine configuration parameter given in seconds.
+            pool_size (int | None): Postgres server or engine configuration parameter given in seconds.
                              Is the maximum number of connections that an application can keep open simultaneously
-            max_overflow (int): Postgres server or engine configuration parameter given in seconds.
+            max_overflow (int | None): Postgres server or engine configuration parameter given in seconds.
                              Determines the maximum number of additional connections that can be temporarily created when demand exceeds the maximum connection pool size.
-            pool_recycle (int): Postgres server or engine configuration parameter given in seconds.
+            pool_recycle (int | None): Postgres server or engine configuration parameter given in seconds.
                              Specifies the time after which connections in the pool are automatically recycled to avoid connection stagnation or blocking issues.
             application_name (str): Postgres server or engine configuration parameter given in text.
                              Seconds: Description that can be seen when listing the connected user sessions in the database.
-        """
-        return {
-            "pool_size": pool_size,
-            "max_overflow": max_overflow,
-            "pool_recycle": pool_recycle,
-            "application_name": application_name
-        } 
+            pool_pre_ping (bool | None):
+                                If True, SQLAlchemy validates the connection before using it, killing zombie connections.
+                                Recommended for long-lived services. If None, use the default (False).
+            pool_use_lifo (bool | None):
+                            If True, use LIFO in the pool (usually reduces latency under high contention).
+                            If None, use the default (False).
+            connect_args (dict[str, Any] | None):
+                            Args passed **directly** to the DB-API (psycopg2/libpq).
+                            Common Keys:
+                            - `application_name`, `connect_timeout`, `options`
+                            - SSL: `sslmode`, `sslrootcert`, `sslcert`, `sslkey`, `sslpassword`
+                            - Keepalives: `keepalives`, `keepalives_idle`, `keepalives_interval`, `keepalives_count`
+                            - `target_session_attrs`, etc.
+                            If you already provide `application_name` here, it is respected (it takes precedence over the parent parameter).
+            engine_kwargs (dict[str, Any] | None):
+                            Advanced parameters that are passed **as is** to `create_engine`.
+                            Some useful ones:
+                            - `pool_timeout` (float): Max time waiting for a connection from the pool (default 30s).
+                            - `isolation_level` (str | None): e.g. "AUTOCOMMIT", "READ COMMITTED".
+                            - `poolclass`: Alternative pool class (`NullPool`, `StaticPool`, etc.).
+                            NOTE: If you change the pool, `pool_size/max_overflow/...` may not apply.
+                            - `execution_options`: Default options dict (e.g., `{"stream_results": True}`).
+                            - `future` (bool): Enables "future" behavior.
+                            - `echo` (bool): SQL log to stdout (debug).
+                            - Any other KW supported by `sqlalchemy.create_engine`.
+
+            Returns:
+            dict: A dictionary containing:
+            - "engine_kwargs": Kwargs ready to be expanded in `create_engine(**engine_kwargs)`
+            (including `pool_size`, `max_overflow`, `pool_recycle`, `pool_pre_ping`,
+            `pool_use_lifo`, `isolation_level`, `pool_timeout`, etc.),
+            - "connect_args": Final dict for `connect_args` (merging `application_name` if applicable).
+
+            Notes:
+            - If you **do not** pass any of the pool parameters, `create_engine` uses its defaults.
+            - `application_name` is injected into `connect_args` only if it is not already in `connect_args`.
+            - Values ​​in `engine_kwargs` can overwrite core values ​​if you repeat the key.
+
+            """
+        _engine_kwargs: dict[str, Any] = {}
+        if max_overflow is not None: _engine_kwargs["max_overflow"] = max_overflow 
+        if pool_pre_ping is not None: _engine_kwargs["pool_pre_ping"] = pool_pre_ping 
+        if pool_recycle is not None: _engine_kwargs["pool_recycle"] = pool_recycle 
+        if pool_size is not None: _engine_kwargs["pool_size"] = pool_size 
+        if pool_use_lifo is not None: _engine_kwargs["pool_use_lifo"] = pool_use_lifo 
+        
+        _engine_kwargs["application_name"]   = application_name if application_name is not None else "logyca-azure-storage-blob"
+
+        if connect_args is not None: _engine_kwargs["connect_args"] = connect_args
+        if engine_kwargs is not None: _engine_kwargs["engine_kwargs"] = engine_kwargs
+
+        if not _engine_kwargs:
+            return None
+        return _engine_kwargs
+
     
     @classmethod
     def build_url_connection(cls,user:str,password:str,host:str,port:int,database:str,ssl_enable:bool):
         """Descriptions
+        
         Data for connection to the database
             Args:
                 ssl_enable (str): whether ssl=require is needed or not
@@ -183,6 +150,7 @@ class SyncConnEngine(metaclass=Singleton):
 
 def check_connection_sync(sync_session: Session)->tuple[bool,str]:
     '''Description
+    
     :return tuple[bool,str]: status, date_time_or_exception_error'''    
     try:
         query = text_to_sql(f"SELECT now();")
