@@ -187,3 +187,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - The new function container_blob_delete_by_age has been added to purge files by modification date. Possible uses include temporary files or archiving compliance.
 
+## [0.3.0] - 2025-11-11
+### Added
+The container_blob_set_properties function is created.
+The functionality file_new_name is added to the container_blob_upload_data_transfer_options function to allow changing the file name when uploading it to a container without changing the original name on disk.
+A new feature called FileAnalyzer has been created. It analyzes and retrieves the metadata and file system properties of a given file at its source upon loading. The data read includes: file name and extension, size (bytes, KB, MB, GB), creation date and time, modification date and time, and last access date.
+### Changed
+The container_blob_get_properties function is renamed to container_blob_get_properties to specify when data is retrieved and modified.
+The examples cover most of the library's functionalities and are organized in such a way that the numerical sequence allows them to be executed in an orderly fashion, creating a continuous flow.

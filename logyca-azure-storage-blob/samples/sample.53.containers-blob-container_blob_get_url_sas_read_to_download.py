@@ -4,6 +4,7 @@ from jaanca_chronometer import Chronometer
 from logyca_azure_storage_blob import AzureStorageAccountBlobManagement, SetCredentialsConnectionString
 
 asabm=AzureStorageAccountBlobManagement(SetCredentialsConnectionString(connection_string=settings.connection_string))
+print("\n.")
 chronometer=Chronometer()
 
 # Example 1 - Small file

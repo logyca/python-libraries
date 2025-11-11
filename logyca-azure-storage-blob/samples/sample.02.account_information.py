@@ -2,6 +2,8 @@ from app.internal.config import settings
 from logyca_azure_storage_blob import AzureStorageAccountBlobManagement, SetCredentialsConnectionString
 import json
 
+print("\n.")
+
 asabm=AzureStorageAccountBlobManagement(SetCredentialsConnectionString(connection_string=settings.connection_string))
 data=asabm.get_account_information()
 print(json.dumps(data,indent=4))

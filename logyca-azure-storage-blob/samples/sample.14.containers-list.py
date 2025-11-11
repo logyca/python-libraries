@@ -1,6 +1,8 @@
 from app.internal.config import settings
 from logyca_azure_storage_blob import AzureStorageAccountBlobManagement, SetCredentialsConnectionString
 
+print("\n.")
+
 asabm=AzureStorageAccountBlobManagement(SetCredentialsConnectionString(connection_string=settings.connection_string))
 containers=asabm.container_list()
 for container in containers:

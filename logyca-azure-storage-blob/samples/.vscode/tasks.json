@@ -11,7 +11,7 @@
         "-NoExit",
         "-Command",
         "Set-Location -Path ''${workspaceFolder}'' ; ",
-        "$python_bin = ''C:\\python\\python313\\python.exe'' ; Write-Host python_bin = $python_bin ;",
+        "$python_bin = ''C:\\python\\python311\\python.exe'' ; Write-Host python_bin = $python_bin ;",
         "& $python_bin -m pip install --upgrade pip ; ",
         "& $python_bin -m pip install virtualenv --upgrade ; ",
         "& $python_bin -m virtualenv venv ; ",
@@ -19,7 +19,7 @@
         "python -m pip install --upgrade pip ; ",
         "pip install -r .\\requirements.txt ; ",
       ],
-      "presentation": { "reveal": "always" },
+      "presentation": { "reveal": "always"},
       "problemMatcher": []
     },
     {
@@ -28,14 +28,13 @@
       "command": "pwsh",
       "args": [
         "-NoLogo",
-        "-NoExit",
         "-Command",
-        "Set-Location -Path '${workspaceFolder}' ; ",
+        "Set-Location -Path ''${workspaceFolder}'' ; ",
         "Get-ChildItem -Path . -Recurse -Force -Directory -Filter venv | Remove-Item -Recurse -Force ; ",
         "Get-ChildItem -Path . -Recurse -Force -Directory -Filter tmp | Remove-Item -Recurse -Force ; ",
         "Get-ChildItem -Path . -Recurse -Force -Directory -Filter logs | Remove-Item -Recurse -Force ; ",
       ],
-      "presentation": { "reveal": "always" },
+      "presentation": { "reveal": "always"  , "close": true},
       "problemMatcher": []
     }
   ]

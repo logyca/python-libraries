@@ -1,4 +1,4 @@
-from azure.core.exceptions import ResourceNotFoundError, HttpResponseError
+from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError, HttpResponseError
 from datetime import datetime, timedelta, timezone
 from enum import StrEnum
 from typing import Literal
@@ -13,7 +13,8 @@ from azure.storage.blob import (
     generate_blob_sas,
     PublicAccess,
     )
-import hashlib, json, math, os, re, time, uuid
+from azure.storage.blob._generated.models import BlobHTTPHeaders    
+import hashlib, json, math, os, re, time, uuid, base64, re
 
 class SetCredentialsNameKey:
     '''
@@ -159,13 +160,13 @@ class AzureStorageAccountBlobManagement:
         return list_containers
 
     def container_create(self,name:str,
-                public_access:Literal[
-                    PublicAccess.BLOB,
-                    PublicAccess.CONTAINER,
-                    PublicAccess.OFF,
-                ] | None = None,
-                ignore_if_exists: bool = True
-            )->bool|str:
+                            public_access:Literal[
+                            PublicAccess.BLOB,
+                            PublicAccess.CONTAINER,
+                            PublicAccess.OFF,
+                            ] | None = None,
+                            ignore_if_exists:bool = True
+                         )->bool|str:
         '''Description
 
         :param name:str         : Name of new container.
@@ -174,12 +175,13 @@ class AzureStorageAccountBlobManagement:
 
         ## Example
         ```Python
+        from azure.storage.blob import PublicAccess
         from logyca_azure_storage_blob import AzureStorageAccountBlobManagement, SetCredentialsConnectionString
 
         asabm=AzureStorageAccountBlobManagement(SetCredentialsConnectionString(connection_string=""))
 
         status=asabm.container_create("name")
-        # status=asabm.container_create("name","blob") # for public access
+        # status=asabm.container_create("name",PublicAccess.BLOB) # for public access
         if status is True:
             print("ok...")
         else:
@@ -193,17 +195,13 @@ class AzureStorageAccountBlobManagement:
             allowed_values = [str(pa.value) for pa in PublicAccess]+[None]
             if public_access not in allowed_values:
                 return f"Not allowed value, allowed values ​​are: {allowed_values}"
+            if ignore_if_exists:
+                container_client = self.__service_client_conn.get_container_client(name)
+                if container_client.exists():
+                    return True                
             self.__service_client_conn.create_container(name=name,public_access=public_access)
-        except HttpResponseError as ex:
-            error_code = getattr(ex, "error_code", None)
-            match error_code:
-                case "PublicAccessNotPermitted":
-                    return f"The container {name} could not be created. Public access to this storage account is not allowed."
-                case "ContainerAlreadyExists":
-                    if ignore_if_exists:
-                        return True
-                    else:
-                        return f"The specified container {name} already exists."
+        except ResourceExistsError as ex:
+            status=f"Container '{name}' already exists."
         except Exception as e:
             status=str(e)
         return status
@@ -303,12 +301,21 @@ class AzureStorageAccountBlobManagement:
         except Exception as e:
             return str(e)
 
-    def container_blob_properties(self,blob_file:str,container_name:str,container_folders:list[str]=[])->BlobProperties|str:
+    def parse_blob_properties_stringify(self,blob_properties:BlobProperties|str)->BlobProperties|str:
+        """Force conversion to string or human reading when applicable."""
+        if isinstance(blob_properties,BlobProperties):
+            content_md5 = base64.b64encode(blob_properties.content_settings.content_md5).decode("utf-8") if blob_properties.content_settings.content_md5 else ""
+            blob_properties.content_settings.content_md5 = content_md5
+
+        return blob_properties
+
+    def container_blob_get_properties(self,blob_file:str,container_name:str,container_folders:list[str]=[],stringify: bool = False)->BlobProperties|str:
         '''Description
 
         :param blob_file:str                : Blob name with extention to get the info.
         :param container_name:str           : Name of container.
         :param container_folders:list[str]  : Subfolders where the blob file is located. Default root container.
+        :param stringify: bool:             : Force conversion to string or human reading when applicable.
         :return list                        : BlobProperties or Exception message
 
         ## Example
@@ -321,7 +328,7 @@ class AzureStorageAccountBlobManagement:
         # Example 1 - Small file
         # Container root path
         blob_file='upload.txt'
-        blob_properties:BlobProperties=asabm.container_blob_properties(blob_file,"container_name")
+        blob_properties:BlobProperties=asabm.container_blob_get_properties(blob_file,"container_name")
         if isinstance(blob_properties,BlobProperties):
             print(f"name: {blob_properties.name}")
             print(f"size: {blob_properties.size} bytes")
@@ -335,7 +342,7 @@ class AzureStorageAccountBlobManagement:
         # Container and subfolders path
         blob_file='upload.txt'
         container_folders=["folder1","folder2"]
-        blob_properties:BlobProperties=asabm.container_blob_properties(blob_file,"container_name",container_folders)
+        blob_properties:BlobProperties=asabm.container_blob_get_properties(blob_file,"container_name",container_folders)
         if isinstance(blob_properties,BlobProperties):
             print(f"name: {blob_properties.name}")
             print(f"size: {blob_properties.size} bytes")
@@ -352,14 +359,94 @@ class AzureStorageAccountBlobManagement:
             container_name=str(container_name)
             container_client = self.__service_client_conn.get_container_client(container_name)
             blob_client = container_client.get_blob_client(path_blob)
-            if blob_client.exists():
-                blob_properties:BlobProperties = blob_client.get_blob_properties()
-                return blob_properties
-            else:
+            if not blob_client.exists():
                 return AzureStorageAccountBlobManagementErrorCode.BLOB_FILE_NOT_FOUND
+            blob_properties:BlobProperties = blob_client.get_blob_properties()
+            blob_properties.tags = blob_client.get_blob_tags()
+            if stringify:
+                blob_properties = self.parse_blob_properties_stringify(blob_properties)
+            return blob_properties
         except Exception as e:
             return str(e)
 
+    def container_blob_set_properties(self,
+            blob_file:str,
+            container_name:str,
+            container_folders:list[str]=[],
+            metadata: dict | None = None,
+            content_settings: dict | None = None,
+            force_unlock: bool = False,
+            **properties_kwargs
+            )->bool|str:
+        '''Description
+
+        :param blob_file:str                : Blob name with extention to get the info.
+        :param container_name:str           : Name of container.
+        :param container_folders:list[str]  : Subfolders where the blob file is located. Default root container.
+        :param force_unlock: bool:          : if "immutability_policy": "{'expiry_time': None, 'policy_mode': None}" is ok
+        :return list                        : BlobProperties or Exception message
+        ```
+        '''
+        try:
+            path_blob = "/".join(container_folders + [blob_file])
+            container_name=str(container_name)
+            container_client = self.__service_client_conn.get_container_client(container_name)
+            blob_client = container_client.get_blob_client(path_blob)
+            if not blob_client.exists():
+                return AzureStorageAccountBlobManagementErrorCode.BLOB_FILE_NOT_FOUND
+            if force_unlock:
+                try:
+                    blob_client.delete_immutability_policy()
+                except HttpResponseError as e:
+                    # msg = str(e)
+                    # if "ImmutableStorageWithVersioning: feature is not enabled" in msg:
+                    #     print("The account does not have Immutable Storage enabled. It cannot be unlocked.")
+                    # else:
+                    #     print(f"Error al eliminar immutability policy: {msg}")
+                    pass
+                except Exception as e:
+                    # print(str(e))
+                    pass
+                # try:
+                #     from azure.storage.blob import ImmutabilityPolicy
+                #     blob_client.set_immutability_policy(immutability_policy=ImmutabilityPolicy(expiry_time=None,policy_mode=None))
+                # except Exception as e:
+                #     print(str(e))
+            current_props:BlobProperties = blob_client.get_blob_properties()
+            current_props.tags = blob_client.get_blob_tags()
+            if metadata is not None:
+                existing_metadata = current_props.metadata or {}
+                merged_metadata = {**existing_metadata, **metadata}
+                merged_metadata = dict(sorted(merged_metadata.items()))
+                blob_client.set_blob_metadata(metadata=merged_metadata)
+            if content_settings is not None:
+                existing_content_settings = current_props.content_settings or {}
+                merged_content_settings = {**existing_content_settings, **content_settings}
+                http_kwargs = {
+                    "blob_cache_control": merged_content_settings.get("cache_control"),
+                    "blob_content_type": merged_content_settings.get("content_type"),
+                    "blob_content_md5": merged_content_settings.get("content_md5"),
+                    "blob_content_encoding": merged_content_settings.get("content_encoding"),
+                    "blob_content_language": merged_content_settings.get("content_language"),
+                    "blob_content_disposition": merged_content_settings.get("content_disposition"),
+                }
+                http_kwargs = {k: v for k, v in http_kwargs.items() if v is not None}
+                blob_http_headers = BlobHTTPHeaders(**http_kwargs)
+                blob_client.set_http_headers(blob_http_headers=blob_http_headers)
+            if properties_kwargs is not None:
+                tags = properties_kwargs.get("tags") or {}
+                merged_tags = {**current_props.tags, **tags}
+                merged_tags = dict(sorted(merged_tags.items()))
+                kwargs = {
+                    "timeout" : properties_kwargs.get("timeout")
+                }
+                kwargs = {k: v for k, v in kwargs.items() if v is not None}
+                blob_client.set_blob_tags(merged_tags,**kwargs)
+
+            return True
+        except Exception as e:
+            return str(e)
+        
     def container_blob_upload_staging_blocks_commit(self,folder_local_full_path:str,file_to_upload:str,container_name:str,container_folders:list[str]=[],verify_file_integrity:bool=False,print_charge_percentage:bool=False)->bool|str:
         '''Description
 
@@ -428,7 +515,7 @@ class AzureStorageAccountBlobManagement:
                 uploaded_chunks = 0
             if blob_client.exists():
                 blob_client.delete_blob()
-            status=self.checksum_get_local_content_md5(path_file,is_string=False)
+            status=self._checksum_get_local_content_md5(path_file,is_string=False)
             if status is False:
                 return status
             content_settings=ContentSettings(content_md5=status)
@@ -447,7 +534,7 @@ class AzureStorageAccountBlobManagement:
                         print(f"Upload process: file_to_upload[{file_to_upload}], Chunks[{uploaded_chunks}/{total_chunks}], Percentage[{upload_percentage:.2f}%]")
                 blob_client.commit_block_list(block_id_list,content_settings=content_settings)
             if verify_file_integrity is True:
-                verify_file_integrity = self.checksum_compare_local_file_versus_remote_content_md5(folder_local_full_path,file_to_upload,container_name,container_folders)
+                verify_file_integrity = self._checksum_compare_local_file_versus_remote_content_md5(folder_local_full_path,file_to_upload,container_name,container_folders)
                 if verify_file_integrity is True:
                     return True
                 else:
@@ -457,7 +544,19 @@ class AzureStorageAccountBlobManagement:
         except Exception as e:
             return str(e)
 
-    def container_blob_upload_data_transfer_options(self,folder_local_full_path:str,file_to_upload:str,container_name:str,container_folders:list[str]=[],max_concurrency:int=2,verify_file_integrity:bool=False)->bool|str:
+    def container_blob_upload_data_transfer_options(self,
+            folder_local_full_path:str,
+            file_to_upload:str,
+            container_name:str,
+            container_folders:list[str]=[],
+            max_concurrency:int=2,
+            verify_file_integrity:bool=False,
+            file_new_name:str|None = None,
+            overwrite:bool = True,
+            metadata: dict | None = None,
+            content_settings: dict | None = None,
+            **upload_kwargs
+        )->bool|str:
         '''Description
 
         Upload file using multiple network upload connections, and use the md5 checksum of the file content to verify the integrity of the uploaded blob content..
@@ -469,42 +568,95 @@ class AzureStorageAccountBlobManagement:
         :param container_folders:list[str]  : Subfolders to upload files to the container. Default root container.
         :param max_concurrency:int          : This argument defines the maximum number of parallel connections to use when the blob size exceeds 64 MiB.
         :param verify_file_integrity:bool   : Enable checksum verification with content_md5
+        :param file_new_name:str|None       : Change the file name before uploading it.
+        :param overwrite:bool               : If True, overwrites an existing blob with the same name. (Default: True)
+        :param metadata:dict|None           : User-defined metadata assigned to the blob. If provided, keys are sorted before sending to Azure. (Default: None)
+        :param content_settings:dict|None   : Optional parameters to configure blob `ContentSettings`. If not provided, a new `ContentSettings` object is created including the computed MD5. If provided, it is merged and `content_md5` always takes precedence.
+        :param upload_kwargs                : Any extra arguments supported by `BlobClient.upload_blob()` (ex: `blob_type`, `length`, etc.).
         :return bool|str                    : True if Ok, otherwise string message exception.
 
         ## Examples
 
         ```Python
-        from logyca_azure_storage_blob import AzureStorageAccountBlobManagement, SetCredentialsConnectionString
-        from jaanca_chronometer import Chronometer # pip install jaanca-chronometer
+        from app.internal.config import settings
+        from app.utils.constants.settings import App
+        from jaanca_chronometer import Chronometer
+        from logyca_azure_storage_blob import (
+                AzureStorageAccountBlobManagement,
+                FileAnalyzer,
+                FileProperties,
+                SetCredentialsConnectionString,
+            )
         import os
-        
+
+        asabm=AzureStorageAccountBlobManagement(SetCredentialsConnectionString(connection_string=settings.connection_string))
+        print("\n.")
         chronometer=Chronometer()
-        asabm=AzureStorageAccountBlobManagement(SetCredentialsConnectionString(connection_string=""))
-
-        # Container root path
-        folder_local_full_path=os.path.abspath(os.path.join(os.path.dirname(__file__),'files'))
+        # Assigning properties
         file='upload.txt'
+        folder_local_full_path=os.path.abspath(os.path.join(os.path.dirname(__file__),'files'))
+        file_local_full_path=os.path.abspath(os.path.join(folder_local_full_path,file))
+        file_analyzer=FileAnalyzer(file_local_full_path)
+        file_properties:FileProperties = file_analyzer.get_properties()
+        if file_properties.error_occurred:
+            print(f"Error: {file_properties.error_msg}")
+            file_properties = {}
+        else:
+            file_properties = file_properties.timestamps.to_dict()
+
+        container_folders=[]
+        file_new_name='upload_renamed_with_properties.txt'
+
+        metadata = {
+            "origen": "script",
+            "usuario": "admin"
+        }
+
+        file_properties = {f"source_file_{key}":value for key,value in file_properties.items()}
+        metadata_merged = {**metadata,**file_properties}
+        metadata_merged = dict(sorted(metadata_merged.items()))
+
+        content_settings = {
+            "cache_control": "max-age=3600, public",
+            "content_type": "application/pdf",
+            "content_encoding": "utf-8",
+            "content_language": "es-CO",
+            "content_disposition": "inline; filename=\"reporte.pdf\""
+        }
+
+        tags = {                 # Blob index tags
+            "owner": "dev-team",
+            "classification": "confidential"
+        }
+        tags = dict(sorted(tags.items()))
+        upload_kwargs = {
+            "timeout": 60,            # Please wait up to 60 seconds for the operation to complete.
+            "validate_content": True, # valid HTTP response
+            "tags": tags
+        }
+
         chronometer.start()
-        status=asabm.container_blob_upload_data_transfer_options(folder_local_full_path,file,"container",max_concurrency=,verify_file_integrity=True)
+        status=asabm.container_blob_upload_data_transfer_options(
+                folder_local_full_path,
+                file,
+                App.AzureStorageAccount.Containers.NAME_WITH_DATA,
+                container_folders,
+                max_concurrency=2,
+                verify_file_integrity=True,
+                file_new_name=file_new_name,
+                metadata=metadata_merged,
+                content_settings=content_settings,
+                **upload_kwargs
+            )
         chronometer.stop()
+        print("Container:[{}]".format(App.AzureStorageAccount.Containers.NAME_WITH_DATA))
         if status is True:
-            print("blob:[{}] uploaded...".format(os.path.join(folder_local_full_path,file)))
+            print("blob:[{}] uploaded...".format(os.path.join(folder_local_full_path,file_new_name)))
             print(f"Elapsed time: {chronometer.get_elapsed_time()}")
         else:
-            print(status)
-
-        # Container and subfolders path
-        container_folders=["folder1","folder2"]
-        folder_local_full_path=os.path.abspath(os.path.join(os.path.dirname(__file__),'files'))
-        file='upload.txt'
-        chronometer.start()
-        status=asabm.container_blob_upload_data_transfer_options(folder_local_full_path,file,"container"A,container_folders,max_concurrency=2,verify_file_integrity=True)
-        chronometer.stop()
-        if status is True:
-            print("blob:[{}] uploaded...".format(os.path.join(folder_local_full_path,file)))
-            print(f"Elapsed time: {chronometer.get_elapsed_time()}")
-        else:
-            print(status)
+            print(f"Error = {status}")
+        
+        
         ```
 
         # References
@@ -515,7 +667,10 @@ class AzureStorageAccountBlobManagement:
         '''
         try:
             container_name=str(container_name)
-            path_blob = "/".join(container_folders + [file_to_upload])
+            if file_new_name is None:
+                path_blob = "/".join(container_folders + [file_to_upload])
+            else:
+                path_blob = "/".join(container_folders + [file_new_name])
             path_file=os.path.join(folder_local_full_path,file_to_upload)
             blob_client = BlobClient(
                 account_url=self.__account_url, 
@@ -526,16 +681,32 @@ class AzureStorageAccountBlobManagement:
                 max_single_put_size=self.__max_single_put_size
             )
 
-            status=self.checksum_get_local_content_md5(path_file,is_string=False)
+            status=self._checksum_get_local_content_md5(path_file,is_string=False)
             if status is False:
                 return status
 
-            content_settings=ContentSettings(content_md5=status)
+            if content_settings is None:
+                content_settings=ContentSettings(content_md5=status)
+            else:
+                content_settings=ContentSettings(content_md5=status,**content_settings)
+            
+            if metadata is None:
+                metadata = {}
+            else:
+                metadata = dict(sorted(metadata.items()))
+
             with open(file=path_file, mode="rb") as data:
-                blob_client = blob_client.upload_blob(data=data, overwrite=True, max_concurrency=max_concurrency,content_settings=content_settings)
+                blob_client = blob_client.upload_blob(
+                        data=data,
+                        overwrite=overwrite,
+                        max_concurrency=max_concurrency,
+                        metadata=metadata,
+                        content_settings=content_settings,
+                        **upload_kwargs                        
+                    )
 
             if verify_file_integrity is True:
-                verify_file_integrity = self.checksum_compare_local_file_versus_remote_content_md5(folder_local_full_path,file_to_upload,container_name,container_folders)
+                verify_file_integrity = self._checksum_compare_local_file_versus_remote_content_md5(folder_local_full_path,file_to_upload,container_name,container_folders,file_new_name=file_new_name,is_downloading=False)
                 if verify_file_integrity is True:
                     return True
                 else:
@@ -629,7 +800,7 @@ class AzureStorageAccountBlobManagement:
                 download_stream = blob_client.download_blob(max_concurrency=max_concurrency)
                 download_stream.readinto(data)
 
-            verify_file_integrity = self.checksum_compare_local_file_versus_remote_content_md5(folder_local_full_path,file_to_download,container_name,container_folders,file_new_name=file_new_name)
+            verify_file_integrity = self._checksum_compare_local_file_versus_remote_content_md5(folder_local_full_path,file_to_download,container_name,container_folders,file_new_name=file_new_name,is_downloading=True)
             if verify_file_integrity is True:
                 return True
             else:
@@ -845,7 +1016,7 @@ class AzureStorageAccountBlobManagement:
         except Exception as e:
             return str(e)
 
-    def checksum_get_local_content_md5(self,full_path_file:str,is_string:bool=True)->bool|str|bytearray:
+    def _checksum_get_local_content_md5(self,full_path_file:str,is_string:bool=True)->bool|str|bytearray:
         '''Description
 
         :full_path_file:str         : Full disk path to file.
@@ -865,7 +1036,7 @@ class AzureStorageAccountBlobManagement:
         except Exception as e:
             return False
 
-    def checksum_compare_local_file_versus_remote_content_md5(self,folder_local_full_path:str,file:str,container_name:str,container_folders:list[str]=[],file_new_name:str|None = None)->bool|str|bytearray:
+    def _checksum_compare_local_file_versus_remote_content_md5(self,folder_local_full_path:str,file:str,container_name:str,container_folders:list[str]=[],file_new_name:str|None = None,is_downloading:bool = True)->bool|str|bytearray:
         '''Description
 
         Compare checksum md5 hash of a local file against the cotent_md5 blob properties.
@@ -876,6 +1047,7 @@ class AzureStorageAccountBlobManagement:
         :param container_name:str           : Container name.
         :param container_folders:list[str]  : Subfolders to upload files to the container. Default root container.
         :param file_new_name:str|None       : This is the new name of file, if the file has been renamed.
+        :param is_downloading:bool          : If the file validation is a download, the local file name may differ from the cloud file name. If it's an upload, the local file name remains the same; only the cloud file name changes.
         :return bool|str                    : True if Ok, otherwise string message exception.
 
         ## Example
@@ -890,7 +1062,7 @@ class AzureStorageAccountBlobManagement:
         # Example 1 - Small file
         # Container root path
         file='upload.txt'
-        status=asabm.checksum_compare_local_file_versus_remote_content_md5(folder_local_full_path,file,"Container")
+        status=asabm._checksum_compare_local_file_versus_remote_content_md5(folder_local_full_path,file,"Container")
         if status is True:
             print("blob:[{}]  checksum ok...".format(os.path.join(folder_local_full_path,file)))
         else:
@@ -900,7 +1072,7 @@ class AzureStorageAccountBlobManagement:
         # Container and subfolders path
         file='upload.txt'
         container_folders=["folder1","folder2"]
-        status=asabm.checksum_compare_local_file_versus_remote_content_md5(folder_local_full_path,file,"Container",container_folders)
+        status=asabm._checksum_compare_local_file_versus_remote_content_md5(folder_local_full_path,file,"Container",container_folders)
         if status is True:
             print("blob:[{}]  checksum ok...".format(os.path.join(folder_local_full_path,file)))
         else:
@@ -909,14 +1081,17 @@ class AzureStorageAccountBlobManagement:
         '''
         try:
             container_name=str(container_name)
-            path_blob = "/".join(container_folders + [file])            
 
-            if file_new_name is None:
-                path_file=os.path.join(folder_local_full_path,file)
-            else:
-                path_file=os.path.join(folder_local_full_path,file_new_name)
+            path_blob = "/".join(container_folders + [file])
+            path_file=os.path.join(folder_local_full_path,file)
 
-            local_content_md5=self.checksum_get_local_content_md5(path_file)
+            if file_new_name:
+                if is_downloading:
+                    path_file=os.path.join(folder_local_full_path,file_new_name)
+                else:
+                    path_blob = "/".join(container_folders + [file_new_name])
+
+            local_content_md5=self._checksum_get_local_content_md5(path_file)
             container_client = self.__service_client_conn.get_container_client(container_name)
             blob_client = container_client.get_blob_client(path_blob)
             blob_properties = blob_client.get_blob_properties()
@@ -926,7 +1101,7 @@ class AzureStorageAccountBlobManagement:
             else:
                 remote_content_md5 = remote_content_md5.hex()
                 if local_content_md5 == remote_content_md5:
-                    data:BlobProperties=self.container_blob_properties(file,container_name,container_folders)
+                    data:BlobProperties=self.container_blob_get_properties(file,container_name,container_folders)
                     if isinstance(blob_properties,BlobProperties):
                         remote_size = data.size
                         local_size = os.path.getsize(path_file)
