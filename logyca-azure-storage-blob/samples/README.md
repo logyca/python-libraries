@@ -46,7 +46,7 @@ launch.json
 
 Configure virtual environment using console commands and run the console scripts with another tool or without a graphical environment.
 
-[Manual: Developed with another tool](docs/virtual-environment-configuration)
+[Manual: Developed with another tool](docs/virtual-environment-configuration.md)
 
 # Other documents
 
