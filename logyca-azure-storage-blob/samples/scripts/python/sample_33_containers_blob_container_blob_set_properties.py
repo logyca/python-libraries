@@ -10,11 +10,21 @@ print("\n.")
 # Example
 # Container root path
 blob_file='upload_renamed_with_properties.txt'
+
+process = {
+    "platform_name": "analitica",
+    "platform_logyca_support_name": "Marcos Arzuza",
+    "platform_logyca_support_email": "marzuza@logyca.com",
+    "platform_client_name": "Andres Cardona",
+    "platform_client_email": "jacardona@logyca.com",
+    "platform_timestamp_to_execute": "2025-03-25 14:30:45-0500"
+}
 metadata = {
     "origen2": "script2",
     "usuario2": "admin2"
 }
-metadata = dict(sorted(metadata.items()))
+metadata_merge = {**metadata,**process}
+metadata_merge = dict(sorted(metadata_merge.items()))
 content_settings = {
     "cache_control": "max-age=3600",
     "content_type": "application/txt",
@@ -35,7 +45,7 @@ properties_kwargs = {
 status_or_msg_error=asabm.container_blob_set_properties(
         blob_file,
         App.AzureStorageAccount.Containers.NAME_WITH_DATA,
-        metadata=metadata,
+        metadata=metadata_merge,
         content_settings=content_settings,
         force_unlock=True,
         **properties_kwargs

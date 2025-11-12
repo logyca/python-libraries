@@ -5,18 +5,20 @@ from logyca_azure_storage_blob import (
         AzureStorageAccountBlobManagement,
         FileAnalyzer,
         FileProperties,
+        FormatDates,
         SetCredentialsConnectionString,
     )
 import os
 
 asabm=AzureStorageAccountBlobManagement(SetCredentialsConnectionString(connection_string=settings.connection_string))
 print("\n.")
+
 chronometer=Chronometer()
 # Assigning properties
 file='upload.txt'
 folder_local_full_path=os.path.abspath(os.path.join(os.path.dirname(__file__),'files'))
 file_local_full_path=os.path.abspath(os.path.join(folder_local_full_path,file))
-file_analyzer=FileAnalyzer(file_local_full_path)
+file_analyzer=FileAnalyzer(full_path_name=file_local_full_path,date_format=FormatDates.POSTGRES_WITH_TZ)
 file_properties:FileProperties = file_analyzer.get_properties()
 if file_properties.error_occurred:
     print(f"Error: {file_properties.error_msg}")
@@ -24,14 +26,13 @@ if file_properties.error_occurred:
 else:
     file_properties = file_properties.timestamps.to_dict()
 
+
 container_folders=[]
 file_new_name='upload_renamed_with_properties.txt'
-
 metadata = {
     "origen": "script",
     "usuario": "admin"
 }
-
 file_properties = {f"source_file_{key}":value for key,value in file_properties.items()}
 metadata_merged = {**metadata,**file_properties}
 metadata_merged = dict(sorted(metadata_merged.items()))

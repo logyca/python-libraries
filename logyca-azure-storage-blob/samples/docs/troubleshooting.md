@@ -1,7 +1,15 @@
-# References
+[← Return to the main README](../README.md "Return to the main project file")
+
+# The following are some solutions to identified problems.roubleshooting
+
+sample.00.Set-level-logging-or-OFF-INFO
+
+## Too many messages - logging
+
+### References
 - https://learn.microsoft.com/en-us/azure/developer/python/sdk/azure-sdk-logging
 
-# Too many logging.info messages
+### Too many logging.info messages
 
 To avoid constant information messages like these:
 
