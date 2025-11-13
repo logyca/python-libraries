@@ -1,6 +1,8 @@
 [← Return to the main README](../README.md "Return to the main project file")
 
-# Creation of the virtual environment
+# Developed with another tool or via console
+
+## Creation of the virtual environment
 
 🧰 Install Python on your operating system and locate the binary.
 🔍📁 For this documentation, Python 3.11 has been downloaded and installed, and the binary is located in this path
@@ -49,3 +51,4 @@ pip install -r .\requirements.txt
 python .\scripts\python\sample_01_conection_status.py
 ```
 
+[← Return to the main README](../README.md "Return to the main project file")

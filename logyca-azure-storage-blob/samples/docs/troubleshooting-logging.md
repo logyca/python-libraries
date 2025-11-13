@@ -36,3 +36,5 @@ import logging
 logger = logging.getLogger('azure')
 logger.setLevel(logging.ERROR)
 ```
+
+[← Return to the main README](../README.md "Return to the main project file")
