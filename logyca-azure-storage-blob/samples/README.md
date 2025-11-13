@@ -10,7 +10,7 @@ pip install -r .\requirements.tx
 # Azure Storage account access keys
 
 - 🔒 Copy the environment variable template located in the root of the `.env.sample` directory to a file named `.env` in the same directory.
-- 🔐⚠️ Obtain the access keys and write them to `.env.`
+- 🔐⚠️ Obtain the access keys and write them to `.env`
 
 # 🧠 Examples of SDK calls to interact with the Azure Storage Account Blob Container Service using Python
 
