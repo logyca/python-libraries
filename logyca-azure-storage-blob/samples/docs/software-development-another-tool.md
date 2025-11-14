@@ -1,8 +1,8 @@
 [← Return to the main README](../README.md "Return to the main project file")
 
-# Developed with another tool or via console
+# 🖥️ Developed with another tool or via console
 
-## Creation of the virtual environment
+## 🐍 Creation of the virtual environment
 
 🧰 Install Python on your operating system and locate the binary.
 🔍📁 For this documentation, Python 3.11 has been downloaded and installed, and the binary is located in this path
@@ -22,7 +22,7 @@ Run the file
 
 ## Manual procedure
 
-## Python Virtual environment
+## 🐍 Python Virtual environment
 
 🧰 Open a console to run the following commands for the first time.
 🔍📁 Navigate to the root of the samples directory and open a PowerShell console.

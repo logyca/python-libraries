@@ -11,7 +11,7 @@ print(f"date now: {date_now_prefix}")
 # Example 1 - INFO
 # Container root path
 preffix_name="app_worker"
-message = "text text...\ntext text...\ntext text...\ntext text...\n"
+message = "\ntext glen...\ntext marcos...\nwil...\n"
 status=asabm.container_blob_upload_logging(App.AzureStorageAccount.Containers.NAME_WITH_DATA,LoggingLevels.INFO,preffix_name,message,date_now_prefix)
 if status is True:
     print("blob file message: uploaded...")

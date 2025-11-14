@@ -19,11 +19,18 @@ process = {
     "platform_client_email": "jacardona@logyca.com",
     "platform_timestamp_to_execute": "2025-03-25 14:30:45-0500"
 }
+
+maintenance_policies = {
+    "maintenance_delete_unit": "days",
+    "maintenance_delete_older_than": "15",
+    "maintenance_delete_is_enabled": "True"
+}
+
 metadata = {
     "origen2": "script2",
     "usuario2": "admin2"
 }
-metadata_merge = {**metadata,**process}
+metadata_merge = {**metadata,**process,**maintenance_policies}
 metadata_merge = dict(sorted(metadata_merge.items()))
 content_settings = {
     "cache_control": "max-age=3600",
